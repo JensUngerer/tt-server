@@ -2,10 +2,12 @@
 
 const { resolve } = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const { DefinePlugin, NormalModuleReplacementPlugin } = require('webpack');
+const { DefinePlugin, NormalModuleReplacementPlugin, ContextReplacementPlugin } = require('webpack');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const NodemonPlugin = require('nodemon-webpack-plugin');
+// const ShebangPlugin = require('webpack-shebang-plugin');
 const packageJson = require('./package.json');
+const { BannerPlugin } = require('webpack');
 
 module.exports = (env = {}) => {
   const config = {
@@ -39,6 +41,11 @@ module.exports = (env = {}) => {
       ],
     },
     plugins: [
+      // https://github.com/Automattic/mongoose/issues/7476
+      new ContextReplacementPlugin(/require_optional/),
+      new ContextReplacementPlugin(/express/),
+      new ContextReplacementPlugin(/log4js/),
+      new ContextReplacementPlugin(/mongoose/),
       new CleanWebpackPlugin(),
       // new DefinePlugin({
       //   VERSION: JSON.stringify(packageJson.version),
@@ -63,6 +70,20 @@ module.exports = (env = {}) => {
         analyzerMode: 'static', // Generates file instead of starting a web server
       })
     );
+  }
+
+  if (env.linux) {
+    console.log('linux');
+    config.plugins.splice(0,
+      0,
+      // https://stackoverflow.com/questions/40755149/how-to-keep-my-shebang-in-place-using-webpack
+      new BannerPlugin({ banner: "#!/usr/bin/env node", raw: true })
+    );
+    // config.plugins.splice(0,
+    //   0,
+    //   // https://stackoverflow.com/questions/40755149/how-to-keep-my-shebang-in-place-using-webpack
+    //   new ShebangPlugin()
+    // );
   }
 
   return config;
