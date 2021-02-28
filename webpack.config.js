@@ -40,10 +40,10 @@ module.exports = (env = {}) => {
     },
     plugins: [
       new CleanWebpackPlugin(),
-      new DefinePlugin({
-        VERSION: JSON.stringify(packageJson.version),
-        DEVELOP: !!env.development,
-      }),
+      // new DefinePlugin({
+      //   VERSION: JSON.stringify(packageJson.version),
+      //   DEVELOP: !!env.development,
+      // }),
       // Use module replacement to use different configs for dev and prod
       new NormalModuleReplacementPlugin(
         /[\\/]src[\\/]config[\\/]config.ts$/, // [\\/] works on all operating systems.
