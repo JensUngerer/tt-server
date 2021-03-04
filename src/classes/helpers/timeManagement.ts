@@ -1,6 +1,6 @@
 import { ITimeEntryDocument } from './../../../../common/typescript/mongoDB/iTimeEntryDocument';
 import { DateTime, Duration } from 'luxon';
-import App from '../../app';
+import { Logger } from './../../logger';
 
 export class TimeManagement {
   public static timeEntryToDuration(timeEntry: ITimeEntryDocument) {
@@ -19,7 +19,7 @@ export class TimeManagement {
 
   public static calculateTimeDifferenceWithoutPauses(timeEntry: ITimeEntryDocument): Duration {
     if (!timeEntry) {
-      App.logger.error('cannot calculate duration for:' + JSON.stringify(timeEntry, null, 4));
+      Logger.instance.error('cannot calculate duration for:' + JSON.stringify(timeEntry, null, 4));
       return Duration.fromMillis(0);
     }
 

@@ -14,6 +14,7 @@ import { IStatistic } from './../../../../common/typescript/iStatistic';
 import { Constants } from '../../../../common/typescript/constants';
 import { Duration } from 'luxon';
 import { DurationHelper } from './../../../../common/typescript/helpers/durationHelper';
+import { Logger } from './../../logger';
 
 export class CalculateDurationsByInterval {
   static async convertTimeSummaryToSummarizedTasks(input: ISummarizedTimeEntries[], mongoDbOperations: MonogDbOperations) {
@@ -25,7 +26,7 @@ export class CalculateDurationsByInterval {
       const taskIds = Object.keys(oneParsedStatistics.durationSumByTaskId);
 
       if (!taskIds || !taskIds.length) {
-        App.logger.error('there are no taskIds');
+        Logger.instance.error('there are no taskIds');
         continue;
       }
 
@@ -35,7 +36,7 @@ export class CalculateDurationsByInterval {
         if (oneParsedTask && oneParsedTask.length === 1) {
           tasks.push(oneParsedTask[0]);
         } else {
-          App.logger.error('No task received');
+          Logger.instance.error('No task received');
         }
       }
 
@@ -82,14 +83,14 @@ export class CalculateDurationsByInterval {
       if (!correspondingTasks ||
         !correspondingTasks.length ||
         correspondingTasks.length !== 1) {
-        App.logger.error('cannot get task to read data from:');
+        Logger.instance.error('cannot get task to read data from:');
         continue;
       }
       const singleCorrespondingTask = correspondingTasks[0];
       const groupCategory = singleCorrespondingTask.groupCategory;
       if (groupCategory !== groupCategorySelection) {
         // DEBUGGING:
-        // App.logger.info('skipping time entry as:' + groupCategory + '!==' + groupCategorySelection);
+        // Logger.instance.info('skipping time entry as:' + groupCategory + '!==' + groupCategorySelection);
         continue;
       }
 
@@ -107,7 +108,7 @@ export class CalculateDurationsByInterval {
 
     if (!timeEntryDocsByInterval ||
       !timeEntryDocsByInterval.length) {
-      App.logger.error('cannot use empty time entries');
+      Logger.instance.error('cannot use empty time entries');
       return;
     }
     const mapByBookingDeclarationId: { [bookingDeclarationId: string]: ITimeEntryDocument[] } = {};
@@ -127,7 +128,7 @@ export class CalculateDurationsByInterval {
         const oneBufferOfTimeEntries = mapByBookingDeclarationId[_bookingDeclarationId];
         if (!oneBufferOfTimeEntries ||
           !oneBufferOfTimeEntries.length) {
-          App.logger.error('empty buffer -> continue');
+          Logger.instance.error('empty buffer -> continue');
           continue;
         }
         let durationInMilliseconds = Duration.fromMillis(0);
@@ -142,7 +143,7 @@ export class CalculateDurationsByInterval {
         if (!bookingDocs ||
           !bookingDocs.length ||
           bookingDocs.length > 1) {
-          App.logger.error('no corresponding booking found -> continue');
+          Logger.instance.error('no corresponding booking found -> continue');
           continue;
         }
         const oneBookingDoc: IBookingDeclarationsDocument = bookingDocs[0];
@@ -184,17 +185,17 @@ export class CalculateDurationsByInterval {
     const oneTimeEntryBufferByGroupCategory = await this.getTimeEntriesByTaskCategory(timeEntryDocsByInterval, groupCategorySelection);
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(timeEntriesByCategory, null, 4));
+    // Logger.instance.info(JSON.stringify(timeEntriesByCategory, null, 4));
 
     let durationSumOverAllCategories = Duration.fromMillis(0);
     const timeSummaryMap: ITimeSummary = {};
     if (!groupCategorySelection) {
-      App.logger.error('cannot get time entries by group category as groupCategory:' + groupCategorySelection);
+      Logger.instance.error('cannot get time entries by group category as groupCategory:' + groupCategorySelection);
       return null;
     }
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(oneTimeEntryBufferByGroupCategory, null, 4));
+    // Logger.instance.info(JSON.stringify(oneTimeEntryBufferByGroupCategory, null, 4));
 
     for (const taskCategory in oneTimeEntryBufferByGroupCategory) {
       if (!durationSumByTaskIdMap[taskCategory]) {
@@ -207,7 +208,7 @@ export class CalculateDurationsByInterval {
         const timeEntriesOfOneCategory: ITimeEntryDocument[] = oneTimeEntryBufferByGroupCategory[taskCategory];
 
         // DEBUGGING:
-        // App.logger.info(JSON.stringify(timeEntriesOfOneCategory));
+        // Logger.instance.info(JSON.stringify(timeEntriesOfOneCategory));
 
         const oneTimeEntryIds: string[] = [];
         let oneOverallSum = Duration.fromMillis(0);
@@ -253,7 +254,7 @@ export class CalculateDurationsByInterval {
     }
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(categoryBufferMap, null, 4));
+    // Logger.instance.info(JSON.stringify(categoryBufferMap, null, 4));
     for (const oneTaskCat in timeSummaryMap) {
       if (Object.prototype.hasOwnProperty.call(timeSummaryMap, oneTaskCat)) {
         const sumEntry = timeSummaryMap[oneTaskCat];
@@ -265,7 +266,7 @@ export class CalculateDurationsByInterval {
     }
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(categoryBufferMap, null, 4));
+    // Logger.instance.info(JSON.stringify(categoryBufferMap, null, 4));
 
     return timeSummaryMap;
   }
@@ -273,12 +274,12 @@ export class CalculateDurationsByInterval {
   static async calculate(startTime: Date, endTime: Date, isBookingBased: boolean, groupCategory: string | null, isDisabledPropertyName?: string, isDisabledPropertyValue?: boolean) {
     try {
       // DEBUGGING:
-      // App.logger.info(startTime.toUTCString());
-      // App.logger.info(endTime.toUTCString());
+      // Logger.instance.info(startTime.toUTCString());
+      // Logger.instance.info(endTime.toUTCString());
 
       const timeEntryDocsByInterval: ITimeEntryDocument[] = await timeEntriesController.getDurationsByInterval(App.mongoDbOperations, startTime, endTime, isDisabledPropertyName, isDisabledPropertyValue);
       if (!timeEntryDocsByInterval || !timeEntryDocsByInterval.length) {
-        App.logger.error('no time entries to calculate duration from');
+        Logger.instance.error('no time entries to calculate duration from');
         return null;
       }
       if (!isBookingBased) {
@@ -288,9 +289,9 @@ export class CalculateDurationsByInterval {
       }
     }
     catch (e) {
-      App.logger.error('outer exception:');
-      App.logger.error(e);
-      App.logger.error(JSON.stringify(e, null, 4));
+      Logger.instance.error('outer exception:');
+      Logger.instance.error(e);
+      Logger.instance.error(JSON.stringify(e, null, 4));
       return e;
     }
   }

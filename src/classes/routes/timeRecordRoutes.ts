@@ -7,6 +7,7 @@ import { ITimeRecordsDocumentData } from '../../../../common/typescript/mongoDB/
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import { Constants } from '../../../../common/typescript/constants';
 import { Duration } from 'luxon';
+import { Logger } from './../../logger';
 
 // https://github.com/linnovate/mean/blob/master/server/routes/user.route.js
 
@@ -24,9 +25,9 @@ const postTimeRecord = async (req: Request, res: Response) => {
   line.durationInMilliseconds = calculatedDuration.toObject();
 
   // DEBUGGING:
-  // App.logger.info(JSON.stringify(line.durationInHours, null, 4));
-  // App.logger.info(JSON.stringify(calculatedMilliseconds, null, 4));
-  // App.logger.info(JSON.stringify(line.durationInMilliseconds, null, 4));
+  // Logger.instance.info(JSON.stringify(line.durationInHours, null, 4));
+  // Logger.instance.info(JSON.stringify(calculatedMilliseconds, null, 4));
+  // Logger.instance.info(JSON.stringify(line.durationInMilliseconds, null, 4));
 
   // a) write into db
   await timeRecordController.post(collectionName, line, App.mongoDbOperations);
@@ -38,7 +39,7 @@ const postTimeRecord = async (req: Request, res: Response) => {
   } else if (collectionName === routes.commitTimeRecordsCollectionName) {
     markAsDeletedResult = await timeRecordController.markTimeEntriesAsDeleted(routes.isDisabledInCommit, line._timeEntryIds, App.mongoDbOperations);
   } else {
-    App.logger.error(collectionName);
+    Logger.instance.error(collectionName);
   }
 
   res.json(markAsDeletedResult);

@@ -40,12 +40,12 @@ const getTaskViaProjectId = async (req: Request, res: Response) => {
 
 const getViaTaskId = async (req: Request, res: Response) => {
   // DEBUGGING:
-  // App.logger.info(req.url);
+  // Logger.instance.info(req.url);
 
   const taskId = UrlHelpers.getIdFromUlr(req.url);
 
   // DEBUGGING:
-  // App.logger.info(taskId);
+  // Logger.instance.info(taskId);
 
   const singleTaskDocuments = await taskController.getViaTaskId(taskId, App.mongoDbOperations);
 

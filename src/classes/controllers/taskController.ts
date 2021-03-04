@@ -12,13 +12,14 @@ import { IContextLine } from '../../../../common/typescript/iContextLine';
 import { Duration } from 'luxon';
 import { Constants } from './../../../../common/typescript/constants';
 import App from '../../app';
+import { Logger } from './../../logger';
 
 class TaskController {
   static async getCorresponding(oneTimeEntryDoc: ITimeEntryDocument, mongoDbOperations: MonogDbOperations) {
     const taskId = oneTimeEntryDoc._taskId;
     const correspondingTasks: ITasksDocument[] = await TaskController.getViaTaskId(taskId, mongoDbOperations);
     if (!correspondingTasks || !correspondingTasks.length) {
-      App.logger.error('no corresponding task for:' + taskId);
+      Logger.instance.error('no corresponding task for:' + taskId);
       return null;
     }
     const oneCorrespondingTask: ITasksDocument = correspondingTasks[0];
@@ -57,7 +58,7 @@ class TaskController {
           taskNumberUrl: '',
         });
       } catch (e) {
-        App.logger.info(e);
+        Logger.instance.info(e);
       }
     }
 
@@ -70,7 +71,7 @@ class TaskController {
     const taskPromise = TaskController.getViaTaskId(taskId, mongoDbOperations);
     taskPromise.then((taskDocs: ITasksDocument[]) => {
       if (!taskDocs || !taskDocs.length || taskDocs.length > 1) {
-        App.logger.error('no or more than one task!');
+        Logger.instance.error('no or more than one task!');
         return;
       }
       let mongoDbDurationSumMap = taskDocs[0].durationSumInMillisecondsMap;
@@ -112,8 +113,8 @@ class TaskController {
     query[routes.taskIdProperty] = taskId;
 
     // DEBUGGING:
-    // App.logger.info('tasksCollection:' + routes.tasksCollectionName);
-    // App.logger.info(JSON.stringify(query, null, 4));
+    // Logger.instance.info('tasksCollection:' + routes.tasksCollectionName);
+    // Logger.instance.info(JSON.stringify(query, null, 4));
 
     return mongoDbOperations.getFiltered(routes.tasksCollectionName, query);
   }

@@ -1,5 +1,7 @@
-import App, { IApp } from './app';
 import { shutdown } from 'log4js';
+
+import { IApp } from './app';
+import { Logger } from './logger';
 
 export class AppManager {
   static app: IApp;
@@ -8,40 +10,40 @@ export class AppManager {
     const disconnectPromise = AppManager.app.closeDataBaseConnection();
     if (isStandalone) {
       disconnectPromise.then(() => {
-        App.logger.error('database disconnect resolved');
+        Logger.instance.error('database disconnect resolved');
         const shutdownPromise: Promise<boolean> = AppManager.app.shutdown();
         shutdownPromise.then(() => {
-          App.logger.error(shutdownMsg);
-          App.logger.error('process.exit()');
+          Logger.instance.error(shutdownMsg);
+          Logger.instance.error('process.exit()');
           shutdown(() => {
             process.exit(0);
           });
         });
         shutdownPromise.catch((err: any) => {
-          App.logger.error(err);
-          App.logger.error('process.exit()');
+          Logger.instance.error(err);
+          Logger.instance.error('process.exit()');
           shutdown(() => {
             process.exit(1);
           });
         });
       });
       disconnectPromise.catch((rejectionReason: any) => {
-        App.logger.error('database disconnect rejected with');
+        Logger.instance.error('database disconnect rejected with');
         if (rejectionReason) {
-          App.logger.error(rejectionReason.toString());
-          App.logger.error(JSON.stringify(rejectionReason));
+          Logger.instance.error(rejectionReason.toString());
+          Logger.instance.error(JSON.stringify(rejectionReason));
         }
         const shutdownPromise: Promise<boolean> = AppManager.app.shutdown();
         shutdownPromise.then(() => {
-          App.logger.error(shutdownMsg);
-          App.logger.error('process.exit()');
+          Logger.instance.error(shutdownMsg);
+          Logger.instance.error('process.exit()');
           shutdown(() => {
             process.exit(2);
           });
         });
         shutdownPromise.catch((err: any) => {
-          App.logger.error(err);
-          App.logger.error('process.exit()');
+          Logger.instance.error(err);
+          Logger.instance.error('process.exit()');
           shutdown(() => {
             process.exit(3);
           });
@@ -71,7 +73,7 @@ export class AppManager {
         process.off(SIGINT, sigIntCallback);
 
         // DEBUGGING:
-        App.logger.error(SIGINT + ' event removed');
+        Logger.instance.error(SIGINT + ' event removed');
 
         AppManager.gracefulShutdown('SIGINT: CTRL+ C -> graceful shutdown completed -> process.exit()', isStandalone);
       };
@@ -83,7 +85,7 @@ export class AppManager {
         process.off(SIGHUP, sigHupCallback);
 
         // DEBUGGING:
-        App.logger.error(SIGHUP + ' event removed');
+        Logger.instance.error(SIGHUP + ' event removed');
 
         AppManager.gracefulShutdown('SIGHUP: window is closed -> graceful shutdown completed -> process.exit()', isStandalone);
       };

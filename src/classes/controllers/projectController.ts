@@ -8,7 +8,7 @@ import { IProjectsDocument } from './../../../../common/typescript/mongoDB/iProj
 import { FilterQuery } from 'mongodb';
 import { Serialization } from './../../../../common/typescript/helpers/serialization';
 import { ITasksDocument } from '../../../../common/typescript/mongoDB/iTasksDocument';
-import App from '../../app';
+import { Logger } from './../../logger';
 
 export default {
   getByTaskId(taskId: string, mongoDbOperations: MonogDbOperations) {
@@ -32,8 +32,8 @@ export default {
         const projectsPromise = mongoDbOperations.getFiltered(routes.projectsCollectionName, projectIdFilterObj);
         projectsPromise.then((projectDocs: IProjectsDocument[]) => {
           if (projectDocs.length !== 1) {
-            App.logger.error('more than one project found for:' + projectId);
-            // App.logger.error(JSON.stringify(projectDocs, null, 4));
+            Logger.instance.error('more than one project found for:' + projectId);
+            // Logger.instance.error(JSON.stringify(projectDocs, null, 4));
             resolve(null);
             return;
           }
@@ -41,7 +41,7 @@ export default {
         });
       });
       taskDocuments.catch(() => {
-        App.logger.error('tasks rejected');
+        Logger.instance.error('tasks rejected');
         resolve(null);
       });
     });
@@ -49,12 +49,12 @@ export default {
   },
   post(req: Request, mongoDbOperations: MonogDbOperations): Promise<any> {
     // DEBUGGING:
-    // App.logger.info(req.body);
+    // Logger.instance.info(req.body);
 
     const body = Serialization.deSerialize<any>(req.body);
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(body, null, 4));
+    // Logger.instance.info(JSON.stringify(body, null, 4));
 
     const project: IProject = body[routes.projectBodyProperty];
 
@@ -63,7 +63,7 @@ export default {
     // should not be necessary
     // delete extendedProject._id;
     // this is undefined
-    // App.logger.error(extendedProject._id);
+    // Logger.instance.error(extendedProject._id);
 
     return mongoDbOperations.insertOne(extendedProject, routes.projectsCollectionName);
   },
@@ -77,7 +77,7 @@ export default {
     const body = Serialization.deSerialize<any>(req.body);
 
     // DEBUGGING:
-    // App.logger.info(JSON.stringify(body, null, 4));
+    // Logger.instance.info(JSON.stringify(body, null, 4));
 
     const propertyName = body[routes.httpPatchIdPropertyToUpdateName]; // 'isDeletedInClient';
     const propertyValue = body[routes.httpPatchIdPropertyToUpdateValue]; //true;
@@ -89,7 +89,7 @@ export default {
     theQueryObj[idPropertyName] = projectId;
 
     // DEBUGGING:
-    // App.logger.error(JSON.stringify({
+    // Logger.instance.error(JSON.stringify({
     //     propertyName: propertyName,
     //     propertyValue: propertyValue,
     //     idPropertyName: idPropertyName,

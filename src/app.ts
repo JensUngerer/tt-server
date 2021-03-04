@@ -14,10 +14,12 @@ import taskRoute from './classes/routes//taskRoute';
 import projectRoute from './classes/routes//projectRoute';
 import timeEntries from './classes/routes//timeEntries';
 import bookingDeclarationRoute from './classes/routes//bookingDeclarationRoute';
-import { getLogger, Logger } from 'log4js';
+// import { getLogger, Logger } from 'log4js';
 import mongoose, { Connection, Document, Model, } from 'mongoose';
 // import { Strategy } from 'passport-local';
 import session from 'express-session';
+
+import { Logger } from './logger';
 
 export interface IApp {
   configure(): void;
@@ -42,7 +44,7 @@ export class App implements IApp {
   private express: Application;
   private server: Server;
   public static mongoDbOperations: MonogDbOperations;
-  static logger: Logger;
+  // static logger: Logger;
   static absolutePathToAppJs: string;
 
   private User: Model<IUser>;
@@ -69,14 +71,9 @@ export class App implements IApp {
   // }
 
   public constructor(port: number, hostname: string) {
-    // setup logging
-    const logger = getLogger();
-    logger.level = 'debug';
-    App.logger = logger;
-
     this.express = express();
     this.server = this.express.listen(port, hostname, () => {
-      App.logger.info('successfully started on: ' + hostname + ':' + port);
+      Logger.instance.info('successfully started on: ' + hostname + ':' + port);
     });
 
     // set up express-session
@@ -122,7 +119,7 @@ export class App implements IApp {
   // private localStrategyHandler: Strategy;
 
   private serializeUserHandler(user: Express.User, done: (err: any, id?: any) => void) {
-    // App.logger.log(JSON.stringify(user, null, 4));
+    // Logger.instance.log(JSON.stringify(user, null, 4));
     done(null, (user as any)._id);
   }
 
@@ -213,20 +210,20 @@ export class App implements IApp {
 
       this.innerAuthentification(body.username, body.password, (err: any, user?: any) => {
         if (err) {
-          App.logger.error(JSON.stringify(err));
+          Logger.instance.error(JSON.stringify(err));
           next(err);
           return;
         }
         if (!user) {
           const noUserMsg = 'no user:' + JSON.stringify(user, null, 4);
-          App.logger.error(noUserMsg);
+          Logger.instance.error(noUserMsg);
           next(noUserMsg);
           return;
         }
         req.login(user, (errForLogin: any) => {
           if (errForLogin) {
             const errForLoginMsg = 'errorForLoging:' + JSON.stringify(errForLogin, null, 4);
-            App.logger.error(errForLoginMsg);
+            Logger.instance.error(errForLoginMsg);
             next(errForLoginMsg);
             return;
           }
@@ -253,8 +250,8 @@ export class App implements IApp {
     // https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
     this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
       // DEBUGGING:
-      // App.logger.info(request.url);
-      // App.logger.info(pathStr);
+      // Logger.instance.info(request.url);
+      // Logger.instance.info(pathStr);
       response.sendFile('index.html', { root: pathStr });
     });
   }
@@ -273,13 +270,13 @@ export class App implements IApp {
       // https://hackernoon.com/graceful-shutdown-in-nodejs-2f8f59d1c357
       this.server.close((err: Error | undefined) => {
         if (err) {
-          App.logger.error('error when closing the http-server');
-          // App.logger.error(err);
-          // App.logger.error(JSON.stringify(err, null, 4));
+          Logger.instance.error('error when closing the http-server');
+          // Logger.instance.error(err);
+          // Logger.instance.error(JSON.stringify(err, null, 4));
           reject(err);
           return;
         }
-        App.logger.error('http-server successfully closed');
+        Logger.instance.error('http-server successfully closed');
 
         resolve(true);
       });

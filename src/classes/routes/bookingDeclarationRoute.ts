@@ -21,7 +21,7 @@ const getViaProjectId = async (req: Request, res: Response) => {
 
 const getViaId = async (req: Request, res: Response) => {
   // DEBUGGING:
-  // App.logger.info('getViaId');
+  // Logger.instance.info('getViaId');
 
   const response = await bookingDeclarationController.getViaId(req, App.mongoDbOperations);
   const stringifiedResponse = Serialization.serialize(response);
@@ -37,6 +37,6 @@ const getViaIdRoute = router.route('/*');
 getViaIdRoute.get(getViaId);
 
 // DEBUGGING:
-// App.logger.info(getViaProjectIdRoute.path);
+// Logger.instance.info(getViaProjectIdRoute.path);
 
 export default router;

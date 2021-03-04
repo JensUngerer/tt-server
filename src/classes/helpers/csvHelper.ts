@@ -7,6 +7,7 @@ import { ITasksDocument } from '../../../../common/typescript/mongoDB/iTasksDocu
 import { ITimeEntryDocument } from '../../../../common/typescript/mongoDB/iTimeEntryDocument';
 import { App } from '../../app';
 import TaskController from '../controllers/taskController';
+import { Logger } from './../../logger';
 
 export class CsvHelper {
   static get currentTimeStamp() {
@@ -36,12 +37,12 @@ export class CsvHelper {
     for (const oneTimeEntryDoc of timeEntryDocsByInterval) {
       timeEntryDocsByIntervalIndex++;
       if (!oneTimeEntryDoc || oneTimeEntryDoc === null) {
-        App.logger.error('oneTimeEntryDoc as index:' + timeEntryDocsByIntervalIndex);
+        Logger.instance.error('oneTimeEntryDoc as index:' + timeEntryDocsByIntervalIndex);
         continue;
       }
       const oneCorrespondingTask: ITasksDocument | null = await TaskController.getCorresponding(oneTimeEntryDoc, App.mongoDbOperations);
       if (!oneCorrespondingTask) {
-        App.logger.error('no corresponding task for:' + JSON.stringify(oneTimeEntryDoc, null, 4));
+        Logger.instance.error('no corresponding task for:' + JSON.stringify(oneTimeEntryDoc, null, 4));
         continue;
       }
 
@@ -82,7 +83,7 @@ export class CsvHelper {
             throw writeFileErr;
           }
           resolve(true);
-          App.logger.info(absolutePathToCsvFile);
+          Logger.instance.info(absolutePathToCsvFile);
         });
       });
     });

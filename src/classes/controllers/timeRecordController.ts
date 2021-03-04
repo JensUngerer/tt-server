@@ -3,7 +3,7 @@ import { MonogDbOperations } from './../helpers/mongoDbOperations';
 import { ITimeRecordsDocumentData } from './../../../../common/typescript/mongoDB/iTimeRecordsDocument';
 // @ts-ignore
 import * as routes from '../../../../common/typescript/routes.js';
-import App from '../../app';
+import { Logger } from './../../logger';
 
 export default {
   post(collectionName: string, line: ITimeRecordsDocumentData, mongoDbOperations: MonogDbOperations): Promise<any> {
@@ -11,7 +11,7 @@ export default {
   },
   markTimeEntriesAsDeleted(isDisabledPropertyName: string, timeEntryIds: string[], mongoDbOperations: MonogDbOperations): Promise<any> {
     // DEBUGGING
-    // App.logger.error('timeEntryIds:' + JSON.stringify(timeEntryIds, null, 4));
+    // Logger.instance.error('timeEntryIds:' + JSON.stringify(timeEntryIds, null, 4));
     if (!timeEntryIds || !timeEntryIds.length) {
       return Promise.resolve(false);
     }
@@ -31,8 +31,8 @@ export default {
             promiseThenLoop();
           });
           promise.catch((reason: any) => {
-            App.logger.error('an patch operation rejected');
-            App.logger.error(reason);
+            Logger.instance.error('an patch operation rejected');
+            Logger.instance.error(reason);
             timeEntryIdsIndex++;
             promiseThenLoop();
           });

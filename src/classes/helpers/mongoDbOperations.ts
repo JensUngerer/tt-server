@@ -1,7 +1,7 @@
-import App from '../../app';
 import { MongoClient, Cursor, FilterQuery } from 'mongodb';
 // @ts-ignore
 import * as routes from '../../../../common/typescript/routes.js';
+import { Logger } from './../../logger';
 
 export class MonogDbOperations {
   private mongoClient: MongoClient | null = null;
@@ -19,7 +19,7 @@ export class MonogDbOperations {
 
   public closeConnection(): Promise<void> | null {
     if (this.mongoClient === null) {
-      App.logger.error('cannot close connection');
+      Logger.instance.error('cannot close connection');
       return null;
     }
     return this.mongoClient.close();
@@ -35,8 +35,8 @@ export class MonogDbOperations {
           return;
         }
         // DEBUGGING:
-        // App.logger.error('connectionSuccess');
-        // App.logger.error(connectionSuccess);
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
 
         const db = this.mongoClient.db(this.databaseName as string);
         const collection = db.collection(collectionName);
@@ -47,14 +47,14 @@ export class MonogDbOperations {
         // // https://mongodb.github.io/node-mongodb-native/3.2/tutorials/crud/
 
         // // DEBUGGING:
-        // App.logger.error(JSON.stringify({
+        // Logger.instance.error(JSON.stringify({
         //     queryObj,
         //     updateObj
         // }, null, 4));
 
         collection.updateOne(queryObj, updateObj, (err: any, result: any) => {
           if (err) {
-            App.logger.error('update failed');
+            Logger.instance.error('update failed');
             resolve(err);
             return;
           }
@@ -64,8 +64,8 @@ export class MonogDbOperations {
 
       });
       this.connection.catch((connectionErr: any) => {
-        App.logger.error('error when connecting to db');
-        App.logger.error(connectionErr);
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
         resolve(connectionErr);
       });
     });
@@ -81,8 +81,8 @@ export class MonogDbOperations {
           return;
         }
         // DEBUGGING:
-        // App.logger.error('connectionSuccess');
-        // App.logger.error(connectionSuccess);
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
 
         const db = this.mongoClient.db(this.databaseName as string);
         const collection = db.collection(collectionName);
@@ -92,15 +92,15 @@ export class MonogDbOperations {
         updateObj.$set[propertyName] = propertyValue;
 
         // DEBUGGING:
-        // App.logger.error('calling updateOne');
-        // App.logger.error(JSON.stringify({
+        // Logger.instance.error('calling updateOne');
+        // Logger.instance.error(JSON.stringify({
         //     queryObj,
         //     updateObj
         // }, null, 4));
 
         collection.updateOne(queryObj, updateObj, (err: any, result: any) => {
           if (err) {
-            App.logger.error('update failed');
+            Logger.instance.error('update failed');
             resolve(err);
             return;
           }
@@ -109,8 +109,8 @@ export class MonogDbOperations {
         });
       });
       this.connection.catch((connectionErr: any) => {
-        App.logger.error('error when connecting to db');
-        App.logger.error(connectionErr);
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
         resolve(connectionErr);
       });
     });
@@ -126,8 +126,8 @@ export class MonogDbOperations {
           return;
         }
         // DEBUGGING:
-        // App.logger.error('connectionSuccess');
-        // App.logger.error(connectionSuccess);
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
 
         const db = this.mongoClient.db(this.databaseName as string);
         const collection = db.collection(collectionName);
@@ -135,14 +135,14 @@ export class MonogDbOperations {
         const retrievedFilterQuery = queryObj ? queryObj : {};
 
         // DEBUGGING:
-        // App.logger.error(JSON.stringify({
+        // Logger.instance.error(JSON.stringify({
         //     collectionName,
         //     retrievedFilterQuery
         // }, null, 4));
 
         const cursor: Cursor<any> = collection.find(retrievedFilterQuery);
         if (!cursor) {
-          App.logger.error('!cursor');
+          Logger.instance.error('!cursor');
           resolve([]);
           this.mongoClient.close();
           return;
@@ -150,7 +150,7 @@ export class MonogDbOperations {
 
         cursor.toArray().then((resolvedData: any[]) => {
           // DEBUGGING:
-          // App.logger.error(JSON.stringify(resolvedData, null, 4));
+          // Logger.instance.error(JSON.stringify(resolvedData, null, 4));
 
           resolve(resolvedData);
         }).catch(() => {
@@ -159,8 +159,8 @@ export class MonogDbOperations {
       });
 
       this.connection.catch((connectionErr: any) => {
-        App.logger.error('error when connecting to db');
-        App.logger.error(connectionErr);
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
         resolve(connectionErr);
       });
     });
@@ -179,20 +179,20 @@ export class MonogDbOperations {
           return;
         }
         // DEBUGGING:
-        // App.logger.error('connectionSuccess');
-        // App.logger.error(connectionSuccess);
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
 
         const db = this.mongoClient.db(this.databaseName as string);
         const collection = db.collection(collectionName);
 
         // DEBUGGING:
-        // App.logger.info('insertOne');
-        // App.logger.info(collectionName);
-        // App.logger.info(JSON.stringify(data, null, 4));
+        // Logger.instance.info('insertOne');
+        // Logger.instance.info(collectionName);
+        // Logger.instance.info(JSON.stringify(data, null, 4));
 
         // should no longer be necessary as data _should_ not contain _id
         if (data && data._id) {
-          App.logger.error('there is already an id -> returning');
+          Logger.instance.error('there is already an id -> returning');
           return;
         }
 
@@ -203,7 +203,7 @@ export class MonogDbOperations {
           }
 
           // DEBUGGING:
-          // App.logger.info(JSON.stringify(result, null, 4));
+          // Logger.instance.info(JSON.stringify(result, null, 4));
 
           resolve(data);
           // this.mongoClient.close();
@@ -211,8 +211,8 @@ export class MonogDbOperations {
       });
 
       this.connection.catch((connectionErr: any) => {
-        App.logger.error('error when connecting to db');
-        App.logger.error(connectionErr);
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
         resolve(connectionErr);
       });
     });
