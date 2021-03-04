@@ -1,8 +1,8 @@
 import { AppManager } from './appManager';
 import App from './app';
-import { configure } from 'log4js';
 import { resolve } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { Logger } from './logger';
 
 // cf. https://stackoverflow.com/questions/41359407/typescript-ignore-imlicitly-any-type-when-importing-js-module
 // @ts-ignore
@@ -19,15 +19,7 @@ if (!existsSync(absolutePathToLoggingFolder)) {
   mkdirSync(absolutePathToLoggingFolder);
 }
 const absolutePathToLoggingFile = resolve(absolutePathToLoggingFolder, loggingFileName);
-
-// setup logging
-configure({
-  appenders: {
-    timeTracker: { type: 'file', filename:  absolutePathToLoggingFile},
-    timeTrackerConsole: { type: 'console' },
-  },
-  categories: { default: { appenders: ['timeTracker', 'timeTrackerConsole'], level: 'debug' } },
-});
+Logger.configureLogger(absolutePathToLoggingFile);
 
 // start app
 const app = new App(port, hostname);

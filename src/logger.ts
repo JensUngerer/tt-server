@@ -1,5 +1,6 @@
-import { ILogger } from "./i-logger";
-import { getLogger, Logger as Logger4js } from 'log4js';
+import { configure, getLogger, Logger as Logger4js } from 'log4js';
+
+import { ILogger } from './i-logger';
 
 export class Logger implements ILogger {
   private static internalInstance: Logger;
@@ -18,6 +19,18 @@ export class Logger implements ILogger {
     this.logger = getLogger();
     this.logger.level = 'debug';
   }
+
+  static configureLogger(absolutePathToLoggingFile: string) {
+    // setup logging
+    configure({
+      appenders: {
+        timeTracker: { type: 'file', filename: absolutePathToLoggingFile },
+        timeTrackerConsole: { type: 'console' },
+      },
+      categories: { default: { appenders: ['timeTracker', 'timeTrackerConsole'], level: 'debug' } },
+    });
+  }
+
 
   info(...message: any[]): void {
     this.logger.info(message);
