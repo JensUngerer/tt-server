@@ -7,7 +7,7 @@ import * as routesConfig from './../../common/typescript/routes.js';
 
 App.setAbsolutePathToAppJs();
 
-const relativePathToLoggingFolder: string = './../../../serverNew/logging';
+const relativePathToLoggingFolder: string = './../../../server/logging';
 const loggingFileName = 'timeTracker.log';
 App.configureLogger(relativePathToLoggingFolder, loggingFileName);
 
