@@ -1,24 +1,24 @@
-import { Application, Response, Request, NextFunction } from 'express';
-import { Server } from 'http';
-import express from 'express';
 import bodyParser from 'body-parser';
+import MongoStore from 'connect-mongo';
 import cors from 'cors';
+import express, { Application, NextFunction, Request, Response } from 'express';
+import session from 'express-session';
+import { existsSync, mkdirSync } from 'fs';
 import helmet from 'helmet';
-import path from 'path';
+import { Server } from 'http';
+import mongoose, { Connection, Document, Model } from 'mongoose';
+import passport from 'passport';
+import path, { resolve } from 'path';
+
 // @ts-ignore
 import * as routesConfig from './../../common/typescript/routes.js';
+
 import { MonogDbOperations } from './classes/helpers/mongoDbOperations';
-
-import timeRecordRoutes from './classes/routes/timeRecordRoutes';
-import taskRoute from './classes/routes//taskRoute';
-import projectRoute from './classes/routes//projectRoute';
-import timeEntries from './classes/routes//timeEntries';
 import bookingDeclarationRoute from './classes/routes//bookingDeclarationRoute';
-// import { getLogger, Logger } from 'log4js';
-import mongoose, { Connection, Document, Model, } from 'mongoose';
-// import { Strategy } from 'passport-local';
-import session from 'express-session';
-
+import projectRoute from './classes/routes//projectRoute';
+import taskRoute from './classes/routes//taskRoute';
+import timeEntries from './classes/routes//timeEntries';
+import timeRecordRoutes from './classes/routes/timeRecordRoutes';
 import { Logger } from './logger';
 
 export interface IApp {
@@ -30,11 +30,7 @@ export interface IApp {
   closeDataBaseConnection(): Promise<void>;
 }
 
-
 // @ts-ignore
-import passport from 'passport';
-import MongoStore from 'connect-mongo';
-
 interface IUser extends Document<any> {
   username: string;
   hash: string;
@@ -50,11 +46,11 @@ export class App implements IApp {
   private User: Model<IUser>;
   private sessionStore: MongoStore;
 
-  private innerAuthentification(username: string, password: string, cb: (err: any, user?: any) => void) {
+  private innerAuthentication(username: string, password: string, cb: (err: any, user?: any) => void) {
     this.User.findOne({ username: username })
       .then((user: IUser | null) => {
 
-        if (!user) { return cb(null, false) }
+        if (!user) { return cb(null, false); }
 
         const isValid = this.validPassword(password, user.hash);
 
@@ -86,17 +82,30 @@ export class App implements IApp {
     });
     const UserSchema = new mongoose.Schema<IUser>({
       username: String,
-      hash: String
+      hash: String,
     });
     this.User = mogooseConnection.model<IUser>('User', UserSchema);
 
     // this.localStrategyHandler = new Strategy(
     //   (username, password, cb) => {
-    //     this.innerAuthentification(username, password, cb);
+    //     this.innerAuthentication(username, password, cb);
     //   }
     // );
     const client = mogooseConnection.getClient();
     this.sessionStore = new MongoStore({ clientPromise: Promise.resolve(client) });
+  }
+
+  public static setAbsolutePathToAppJs() {
+    App.absolutePathToAppJs = process.argv[1];
+  }
+
+  public static configureLogger(relativePathToLoggingFolder: string, loggingFileName: string) {
+    const absolutePathToLoggingFolder: string = resolve(App.absolutePathToAppJs, relativePathToLoggingFolder);
+    if (!existsSync(absolutePathToLoggingFolder)) {
+      mkdirSync(absolutePathToLoggingFolder);
+    }
+    const absolutePathToLoggingFile = resolve(absolutePathToLoggingFolder, loggingFileName);
+    Logger.configureLogger(absolutePathToLoggingFile);
   }
 
   public setupDatabaseConnection() {
@@ -147,16 +156,14 @@ export class App implements IApp {
       saveUninitialized: true,
       store: this.sessionStore,
       cookie: {
-        maxAge: 1000 * 60 * 60 * 14 // (1 day * 14 hr/1 day * 60 min/1 hr * 60 sec/1 min * 1000 ms / 1 sec)
-      }
+        maxAge: 1000 * 60 * 60 * 14, // (1 day * 14 hr/1 day * 60 min/1 hr * 60 sec/1 min * 1000 ms / 1 sec)
+      },
     });
     this.express.use(sessionHandler);
     const passportInitializeHandler = passport.initialize();
     this.express.use(passportInitializeHandler);
-    const passportSessionHanlder = passport.session();
-    this.express.use(passportSessionHanlder);
-
-
+    const passportSessionHandler = passport.session();
+    this.express.use(passportSessionHandler);
   }
 
   public configureExpress(): void {
@@ -164,7 +171,7 @@ export class App implements IApp {
     const pathStr: string = path.resolve(App.absolutePathToAppJs, relativePathToAppJs);
 
     // https://medium.com/javascript-in-plain-english/excluding-routes-from-calling-express-middleware-with-express-unless-3389ab4117ef
-    const ensureAuthenticatedHanlder = (req: Request, res: Response, next: NextFunction) => {
+    const ensureAuthenticatedHandler = (req: Request, res: Response, next: NextFunction) => {
       const allowedUrls = [
         '/styles',
         '/runtime',
@@ -182,7 +189,7 @@ export class App implements IApp {
         routesConfig.timeRecord,
         routesConfig.task,
         routesConfig.project,
-        routesConfig.timeEntries
+        routesConfig.timeEntries,
       ];
       let isAllowed = false;
       allowedUrls.forEach((oneAllowedUrlPrefix: string) => {
@@ -203,12 +210,11 @@ export class App implements IApp {
         res.json({ message: DEFAULT_NOT_AUTHENTICATED_MESSAGE });
       }
     };
-    this.express.use(ensureAuthenticatedHanlder)
-
+    this.express.use(ensureAuthenticatedHandler);
     this.express.post('/api/login', (req: Request, res: Response, next: NextFunction) => {
       const body = JSON.parse(req.body);
 
-      this.innerAuthentification(body.username, body.password, (err: any, user?: any) => {
+      this.innerAuthentication(body.username, body.password, (err: any, user?: any) => {
         if (err) {
           Logger.instance.error(JSON.stringify(err));
           next(err);
@@ -222,13 +228,13 @@ export class App implements IApp {
         }
         req.login(user, (errForLogin: any) => {
           if (errForLogin) {
-            const errForLoginMsg = 'errorForLoging:' + JSON.stringify(errForLogin, null, 4);
+            const errForLoginMsg = 'errorForLogging:' + JSON.stringify(errForLogin, null, 4);
             Logger.instance.error(errForLoginMsg);
             next(errForLoginMsg);
             return;
           }
           res.status(200).send('login-was-successful');
-        })
+        });
       });
     });
     this.express.get('/api/login-status', (req, res) => {
