@@ -36,7 +36,6 @@
     "log4js": "^6.3.0",
     "luxon": "^1.26.0",
     "mongodb": "^3.6.4",
-    "mongodb-client-encryption": "^1.2.1",
     "mongoose": "^5.11.19",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
