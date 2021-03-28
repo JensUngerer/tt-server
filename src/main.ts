@@ -1,11 +1,13 @@
 import { AppManager } from './appManager';
 import App from './app';
+import dotenv from 'dotenv';
 
 // cf. https://stackoverflow.com/questions/41359407/typescript-ignore-imlicitly-any-type-when-importing-js-module
 // @ts-ignore
 import * as routesConfig from './../../common/typescript/routes.js';
 
-App.setAbsolutePathToAppJs();
+dotenv.config();
+App.setAbsolutePathToAppJs(process.env.PRIVATE_KEY as string, process.env.CERT as string);
 
 const relativePathToLoggingFolder: string = './../../../server/logging';
 const loggingFileName = 'timeTracker.log';

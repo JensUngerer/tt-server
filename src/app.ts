@@ -3,12 +3,12 @@ import MongoStore from 'connect-mongo';
 import cors from 'cors';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import session from 'express-session';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import helmet from 'helmet';
-import { Server } from 'http';
 import mongoose, { Connection, Document, Model } from 'mongoose';
 import passport from 'passport';
 import path, { resolve } from 'path';
+import https, { Server, ServerOptions } from 'https';
 
 // @ts-ignore
 import * as routesConfig from './../../common/typescript/routes.js';
@@ -42,6 +42,8 @@ export class App implements IApp {
   public static mongoDbOperations: MonogDbOperations;
   // static logger: Logger;
   static absolutePathToAppJs: string;
+  static absolutePathToPrivateKey: string;
+  static absolutePathToCert: string;
 
   private User: Model<IUser>;
   private sessionStore: MongoStore;
@@ -68,9 +70,18 @@ export class App implements IApp {
 
   public constructor(port: number, hostname: string) {
     this.express = express();
-    this.server = this.express.listen(port, hostname, () => {
+    const key = readFileSync(App.absolutePathToPrivateKey);
+    const cert = readFileSync(App.absolutePathToCert);
+    const options: ServerOptions = {
+      key: key,
+      cert: cert
+    };
+    this.server = https.createServer(options, this.express);
+    this.server.listen(port, hostname, () => {
       Logger.instance.info('successfully started on: ' + hostname + ':' + port);
-    });
+    })
+    // this.server = this.express.listen(port, hostname, () => {
+    // });
 
     // set up express-session
     const completeDataBaseString = routesConfig.url + '/' + routesConfig.sessionsDataBaseName;
@@ -95,8 +106,14 @@ export class App implements IApp {
     this.sessionStore = new MongoStore({ clientPromise: Promise.resolve(client) });
   }
 
-  public static setAbsolutePathToAppJs() {
+  public static setAbsolutePathToAppJs(privateKeyRelativePath: string, certRelativePath: string) {
     App.absolutePathToAppJs = process.argv[1];
+    App.absolutePathToPrivateKey = resolve(App.absolutePathToAppJs, privateKeyRelativePath);
+    App.absolutePathToCert = resolve(App.absolutePathToAppJs, certRelativePath);
+
+    // DEBUGGING
+    // console.log(absolutePathToPrivateKey);
+    // console.log(absolutePathToCert);
   }
 
   public static configureLogger(relativePathToLoggingFolder: string, loggingFileName: string) {
