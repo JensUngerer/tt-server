@@ -240,7 +240,7 @@ export class App implements IApp {
         '/favicon.ico',
         '/api/',
         '/vendor',
-        // '/' + routesConfig.viewsPrefix
+        '/' + routesConfig.viewsPrefix + 'login'
       ];
       let isAllowed = false;
       allowedUrls.forEach((oneAllowedUrlPrefix: string) => {
