@@ -37,6 +37,14 @@ interface IUser extends Document<any> {
 }
 
 export class App implements IApp {
+  private readonly domain = process.env.DOMAIN;
+
+  private readonly csp = "default-src 'self';frame-src 'self';script-src 'self';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data:;connect-src '"  + this.domain;
+  
+  private readonly relativePathToAppJs = './../../../client/dist/mtt-client';
+
+  private readonly pathStr = path.resolve(App.absolutePathToAppJs, this.relativePathToAppJs);;
+  
   private express: Application;
   private server: Server;
   public static mongoDbOperations: MonogDbOperations;
@@ -161,7 +169,41 @@ export class App implements IApp {
     this.express.use(bodyParser.text());
     this.express.use(bodyParser.urlencoded({ extended: true }));
     this.express.use(helmet());
-    this.express.use(cors());
+
+    const corsConfig: any = {
+      origin: this.domain
+    };
+
+    this.express.use('/', cors(corsConfig), (req: Request, res: Response, next: NextFunction) => {
+      // DEBUGGING:
+      Logger.instance.info('cors:' + req.url);
+
+      // csp
+      res.setHeader("Content-Security-Policy", this.csp);
+
+      // Website you wish to allow to connect
+      // res.setHeader('Access-Control-Allow-Origin', req.headers.origin ? req.headers.origin.toString() : '');
+      res.setHeader('Access-Control-Allow-Origin', corsConfig.origin);
+
+      // Request methods you wish to allow
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+      // Request headers you wish to allow
+      res.setHeader('Access-Control-Allow-Headers', "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept");
+
+      // Set to true if you need the website to include cookies in the requests sent
+      // to the API (e.g. in case you use sessions)
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+      if ("OPTIONS" == req.method) {
+        // console.log('OPTIONS');
+        next();
+      } else {
+        next();
+      }
+    });
+
+    this.express.use('/', express.static(this.pathStr));
 
     // passport.use(this.localStrategyHandler);
     passport.serializeUser(this.serializeUserHandler.bind(this));
@@ -184,9 +226,6 @@ export class App implements IApp {
   }
 
   public configureExpress(): void {
-    const relativePathToAppJs: string = './../../../client/dist/mtt-client';
-    const pathStr: string = path.resolve(App.absolutePathToAppJs, relativePathToAppJs);
-
     // https://medium.com/javascript-in-plain-english/excluding-routes-from-calling-express-middleware-with-express-unless-3389ab4117ef
     const ensureAuthenticatedHandler = (req: Request, res: Response, next: NextFunction) => {
       const allowedUrls = [
@@ -201,12 +240,7 @@ export class App implements IApp {
         '/favicon.ico',
         '/api/',
         '/vendor',
-        '/' + routesConfig.viewsPrefix,
-        routesConfig.bookingDeclaration,
-        routesConfig.timeRecord,
-        routesConfig.task,
-        routesConfig.project,
-        routesConfig.timeEntries,
+        // '/' + routesConfig.viewsPrefix
       ];
       let isAllowed = false;
       allowedUrls.forEach((oneAllowedUrlPrefix: string) => {
@@ -217,18 +251,31 @@ export class App implements IApp {
       if (req.url === '/') {
         isAllowed = true;
       }
+      // DEBUGGING:
+      Logger.instance.info('isAllowed:' + isAllowed + '@' + req.url);
+      
       if (isAllowed) {
-        next('route');
+        next();
       } else {
+        if (req.isAuthenticated()) {
+          // DEBUGGING:
+          Logger.instance.info('else-isAuthenticated:' + req.isAuthenticated() + '@' + req.url);
+          next();
+          return;
+        }
         const HTTP_STATUS_CODE_UNAUTHORIZED = 401;
-        const DEFAULT_NOT_AUTHENTICATED_MESSAGE = 'Authentication required';
+        // const DEFAULT_NOT_AUTHENTICATED_MESSAGE = 'Authentication required';
 
-        res.status(HTTP_STATUS_CODE_UNAUTHORIZED);
-        res.json({ message: DEFAULT_NOT_AUTHENTICATED_MESSAGE });
+        res.sendStatus(HTTP_STATUS_CODE_UNAUTHORIZED);
+        // res.json({ message: DEFAULT_NOT_AUTHENTICATED_MESSAGE });
       }
     };
     this.express.use(ensureAuthenticatedHandler);
     this.express.post('/api/login', (req: Request, res: Response, next: NextFunction) => {
+      // TODO: necessary ?
+      // res.setHeader("Content-Security-Policy", this.csp);
+      // res.setHeader('Access-Control-Allow-Credentials', 'true');
+      
       const body = JSON.parse(req.body);
 
       this.innerAuthentication(body.username, body.password, (err: any, user?: any) => {
@@ -250,7 +297,11 @@ export class App implements IApp {
             next(errForLoginMsg);
             return;
           }
-          res.status(200).send('login-was-successful');
+
+          // DEBUGGING:
+          Logger.instance.info('login was successful');
+
+          res.sendStatus(200);
         });
       });
     });
@@ -262,10 +313,17 @@ export class App implements IApp {
     // Visiting this route logs the user out
     this.express.post('/api/logout', (req, res, next) => {
       req.logout();
-      res.status(200).send('logout-was-successful');
+
+      // TODO: necessary ?
+      // res.setHeader("Content-Security-Policy", this.csp);
+      // res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+      // DEBUGGING:
+      Logger.instance.info('Logout was successful');
+
+      res.sendStatus(200);
     });
 
-    this.express.use('/', express.static(pathStr));
 
     // https://stackoverflow.com/questions/25216761/express-js-redirect-to-default-page-instead-of-cannot-get
     // https://stackoverflow.com/questions/30546524/making-angular-routes-work-with-express-routes
@@ -275,7 +333,11 @@ export class App implements IApp {
       // DEBUGGING:
       // Logger.instance.info(request.url);
       // Logger.instance.info(pathStr);
-      response.sendFile('index.html', { root: pathStr });
+
+      // TODO: necessary?
+      // response.setHeader("Content-Security-Policy", this.csp);
+
+      response.sendFile('index.html', { root: this.pathStr });
     });
   }
 
