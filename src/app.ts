@@ -229,28 +229,32 @@ export class App implements IApp {
     // https://medium.com/javascript-in-plain-english/excluding-routes-from-calling-express-middleware-with-express-unless-3389ab4117ef
     const ensureAuthenticatedHandler = (req: Request, res: Response, next: NextFunction) => {
       const allowedUrls = [
-        '/styles',
-        '/runtime',
-        '/polyfills',
-        '/main',
-        '/scripts',
-        '/assets',
-        '/MaterialIcons-Regular',
+        '/',
+        // '/styles',
+        // '/runtime',
+        // '/polyfills',
+        // '/main',
+        // '/scripts',
+        // '/assets',
+        // '/MaterialIcons-Regular',
         '/stopwatch-2-32.ico',
         '/favicon.ico',
-        '/api/',
-        '/vendor',
-        '/' + routesConfig.viewsPrefix + 'login'
+        // '/api/',
+        // '/vendor',
+        '/' + routesConfig.viewsPrefix + 'login',
+        '/api/login',
+        '/api/login-status',
+        '/api/logout'
       ];
       let isAllowed = false;
       allowedUrls.forEach((oneAllowedUrlPrefix: string) => {
-        if (req.url.startsWith(oneAllowedUrlPrefix)) {
+        if (req.url === oneAllowedUrlPrefix) {
           isAllowed = true;
         }
       });
-      if (req.url === '/') {
-        isAllowed = true;
-      }
+      // if (req.url === '/') {
+      //   isAllowed = true;
+      // }
       // DEBUGGING:
       Logger.instance.info('isAllowed:' + isAllowed + '@' + req.url);
       
@@ -329,16 +333,17 @@ export class App implements IApp {
     // https://stackoverflow.com/questions/30546524/making-angular-routes-work-with-express-routes
     // https://stackoverflow.com/questions/26917424/angularjs-and-express-routing-404
     // https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
-    this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
-      // DEBUGGING:
-      // Logger.instance.info(request.url);
-      // Logger.instance.info(pathStr);
+    // necessary ?
+    // this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
+    //   // DEBUGGING:
+    //   // Logger.instance.info(request.url);
+    //   // Logger.instance.info(pathStr);
 
-      // TODO: necessary?
-      // response.setHeader("Content-Security-Policy", this.csp);
+    //   // TODO: necessary?
+    //   // response.setHeader("Content-Security-Policy", this.csp);
 
-      response.sendFile('index.html', { root: this.pathStr });
-    });
+    //   response.sendFile('index.html', { root: this.pathStr });
+    // });
   }
 
   public configureRest() {
