@@ -334,16 +334,16 @@ export class App implements IApp {
     // https://stackoverflow.com/questions/26917424/angularjs-and-express-routing-404
     // https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
     // necessary ?
-    // this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
-    //   // DEBUGGING:
-    //   // Logger.instance.info(request.url);
-    //   // Logger.instance.info(pathStr);
+    this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
+      // DEBUGGING:
+      Logger.instance.info('deliver view for:' + request.url);
+      // Logger.instance.info(pathStr);
 
-    //   // TODO: necessary?
-    //   // response.setHeader("Content-Security-Policy", this.csp);
+      // TODO: necessary?
+      // response.setHeader("Content-Security-Policy", this.csp);
 
-    //   response.sendFile('index.html', { root: this.pathStr });
-    // });
+      response.sendFile('index.html', { root: this.pathStr });
+    });
   }
 
   public configureRest() {
