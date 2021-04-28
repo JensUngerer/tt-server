@@ -128,6 +128,29 @@ const patchTimeEntriesStop = async (req: Request, res: Response) => {
 };
 
 /**
+ * 
+ * @param req 
+ * @param res 
+ */
+const postTryStopHandler = async (req: Request, res: Response) => {
+  const body = Serialization.deSerialize<any>(req.body);
+  // let theQueryObj: any = {};
+  // const idPropertyName = body[routesConfig.httpPatchIdPropertyName];
+  // const timeEntryId = body[routesConfig.httpPatchIdPropertyValue];
+  // https://mongodb.github.io/node-mongodb-native/3.2/tutorials/crud/
+  // theQueryObj[idPropertyName] = timeEntryId;
+  
+  // DEBUGGING: trace incoming request
+  Logger.instance.info('Window was closed -> end time entry');
+  Logger.instance.info(JSON.stringify(body, null, 4));
+
+  // check wether running TODO:
+
+  // forward to patch
+   patchTimeEntriesStop(req, res);
+};
+
+/**
  * 5)
  * HTTP-PATCH /NodeJS/timeEntries + '/delete' -> a timeEntries document is updated (and so marked as isDeletedInClient)
  * @param req
@@ -239,7 +262,7 @@ const getViaIdHandler = async (req: Request, res: Response) => {
   res.send(stringifiedResponse);
 };
 
-const getTimeInterval = async (req: Request, res: Response)  => {
+const getTimeInterval = async (req: Request, res: Response) => {
   // DEBUGGING:
   // Logger.instance.info('getTimeInterval');
 
@@ -392,6 +415,9 @@ getStatistics.get(getStatisticsHandler);
 
 const getNonCommittedDays = router.route(routesConfig.nonCommittedDaysSuffix);
 getNonCommittedDays.get(getNonCommittedDaysHandler);
+
+const postTryStop = router.route(routesConfig.timeEntriesTryStopSuffix);
+postTryStop.post(postTryStopHandler);
 
 const getViaId = router.route('/*');
 getViaId.get(getViaIdHandler);
