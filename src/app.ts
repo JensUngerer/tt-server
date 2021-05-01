@@ -124,8 +124,9 @@ export class App implements IApp {
     // console.log(absolutePathToCert);
   }
 
-  public static configureLogger(relativePathToLoggingFolder: string, loggingFileName: string) {
-    const absolutePathToLoggingFolder: string = resolve(App.absolutePathToAppJs, relativePathToLoggingFolder);
+  public static configureLogger(loggingFileName: string) {
+    // const absolutePathToLoggingFolder: string = resolve(App.absolutePathToAppJs, relativePathToLoggingFolder);
+    const absolutePathToLoggingFolder = '/var/log/time-tracker';
     if (!existsSync(absolutePathToLoggingFolder)) {
       mkdirSync(absolutePathToLoggingFolder);
     }

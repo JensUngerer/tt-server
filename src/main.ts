@@ -9,9 +9,9 @@ import * as routesConfig from './../../common/typescript/routes.js';
 dotenv.config();
 App.setAbsolutePathToAppJs(process.env.PRIVATE_KEY as string, process.env.CERT as string);
 
-const relativePathToLoggingFolder: string = './../../../server/logging';
+// const relativePathToLoggingFolder: string = './../../../server/logging';
 const loggingFileName = 'timeTracker.log';
-App.configureLogger(relativePathToLoggingFolder, loggingFileName);
+App.configureLogger(loggingFileName);
 
 // start app
 const port: number = routesConfig.port;
