@@ -139,15 +139,33 @@ const postTryStopHandler = async (req: Request, res: Response) => {
   // const timeEntryId = body[routesConfig.httpPatchIdPropertyValue];
   // https://mongodb.github.io/node-mongodb-native/3.2/tutorials/crud/
   // theQueryObj[idPropertyName] = timeEntryId;
-  
+
   // DEBUGGING: trace incoming request
   Logger.instance.info('Window was closed -> end time entry');
   Logger.instance.info(JSON.stringify(body, null, 4));
 
-  // check wether running TODO:
+  // check whether running:
+  let theQueryObj: any = {};
+  theQueryObj[routesConfig.endDateProperty] = null;
 
-  // forward to patch
-   patchTimeEntriesStop(req, res);
+  // DEBUGGING:
+  Logger.instance.info('search for unterminated time-etnries with:' + JSON.stringify(theQueryObj, null, 4));
+
+  const filteredDataPromise = App.mongoDbOperations.getFiltered(routesConfig.timEntriesCollectionName, theQueryObj);
+  filteredDataPromise.then((timeEntriesWithoutTermination: ITimeEntryDocument[]) => {
+    // DEBUGGING:
+    Logger.instance.info('timeEntriesWithoutTermination:' + JSON.stringify(timeEntriesWithoutTermination, null, 4));
+
+    if (timeEntriesWithoutTermination && timeEntriesWithoutTermination.length) {
+      // forward to patch as length >= 1
+      patchTimeEntriesStop(req, res);
+    }
+  });
+  filteredDataPromise.catch((err: any) => {
+    Logger.instance.error('getFiltered rejected for:' + JSON.stringify(theQueryObj, null, 4));
+    Logger.instance.error(err);
+    Logger.instance.error(JSON.stringify(err, null, 4));
+  });
 };
 
 /**
