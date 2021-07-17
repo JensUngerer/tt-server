@@ -20,6 +20,11 @@ import taskRoute from './classes/routes//taskRoute';
 import timeEntries from './classes/routes//timeEntries';
 import timeRecordRoutes from './classes/routes/timeRecordRoutes';
 import { Logger } from './logger';
+import { ISessionTimeEntry } from '../../common/typescript/iSessionTimeEntry';
+import { v4 } from 'uuid';
+import { FilterQuery } from 'mongodb';
+import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator.js';
+import { Duration } from 'luxon';
 
 export interface IApp {
   configure(): void;
@@ -39,12 +44,12 @@ interface IUser extends Document<any> {
 export class App implements IApp {
   private readonly domain = process.env.DOMAIN;
 
-  private readonly csp = "default-src 'self';frame-src 'self';script-src 'self';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data:;connect-src "  + this.domain + "";
-  
+  private readonly csp = "default-src 'self';frame-src 'self';script-src 'self';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data:;connect-src " + this.domain + "";
+
   private readonly relativePathToAppJs = './../../../client/dist/mtt-client';
 
   private readonly pathStr = path.resolve(App.absolutePathToAppJs, this.relativePathToAppJs);;
-  
+
   private express: Application;
   private server: Server;
   public static mongoDbOperations: MonogDbOperations;
@@ -177,7 +182,7 @@ export class App implements IApp {
 
     this.express.use('/', cors(corsConfig), (req: Request, res: Response, next: NextFunction) => {
       // DEBUGGING:
-      Logger.instance.info('cors:' + req.url);
+      // Logger.instance.info('cors:' + req.url);
 
       // csp
       res.setHeader("Content-Security-Policy", this.csp);
@@ -211,6 +216,12 @@ export class App implements IApp {
     passport.deserializeUser(this.deserializeUser.bind(this));
 
     const sessionHandler = session({
+      genid: (req) => {
+        // https://medium.com/@evangow/server-authentication-basics-express-sessions-passport-and-curl-359b7456003d
+        // console.log('Inside the session middleware')
+        // console.log(req.sessionID)
+        return v4() // use UUIDs for session IDs
+      },
       secret: routesConfig.secret,
       resave: false,
       saveUninitialized: true,
@@ -257,14 +268,14 @@ export class App implements IApp {
       //   isAllowed = true;
       // }
       // DEBUGGING:
-      Logger.instance.info('isAllowed:' + isAllowed + '@' + req.url);
-      
+      // Logger.instance.info('isAllowed:' + isAllowed + '@' + req.url);
+
       if (isAllowed) {
         next();
       } else {
         if (req.isAuthenticated()) {
           // DEBUGGING:
-          Logger.instance.info('else-isAuthenticated:' + req.isAuthenticated() + '@' + req.url);
+          // Logger.instance.info('else-isAuthenticated:' + req.isAuthenticated() + '@' + req.url);
           next();
           return;
         }
@@ -280,7 +291,7 @@ export class App implements IApp {
       // TODO: necessary ?
       // res.setHeader("Content-Security-Policy", this.csp);
       // res.setHeader('Access-Control-Allow-Credentials', 'true');
-      
+
       const body = JSON.parse(req.body);
 
       this.innerAuthentication(body.username, body.password, (err: any, user?: any) => {
@@ -305,6 +316,16 @@ export class App implements IApp {
 
           // DEBUGGING:
           Logger.instance.info('login was successful');
+          var sessionIdAsTimeEntryId = req.sessionID;
+          // const reqMock: Request = {} as Request;
+          // reqMock.body = {};
+          var startTime = new Date();
+          const sessionTimeEntry: ISessionTimeEntry = {
+            startTime,
+            timeEntryId: sessionIdAsTimeEntryId,
+            day: DurationCalculator.getDayFrom(startTime)
+          };
+          App.mongoDbOperations.insertOne(sessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
 
           res.sendStatus(200);
         });
@@ -325,8 +346,33 @@ export class App implements IApp {
 
       // DEBUGGING:
       Logger.instance.info('Logout was successful');
+      
+      const sessionIdAsTimeEntryId = req.sessionID;
+      const filterQuery: FilterQuery<any> =  {
+        timeEntryId: sessionIdAsTimeEntryId
+      };
+      const sessionTimeEntryPromise = App.mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, filterQuery);
+      sessionTimeEntryPromise.then((docs: ISessionTimeEntry[]) => {
+          if (!docs || !docs.length) {
+            return;
+          }
+          var endTime = new Date();
+          var storedSessionTimeEntry = docs[0];
+          var startTime = storedSessionTimeEntry.startTime;
+          const calculatedMilliseconds = endTime.getTime() - startTime.getTime();
+          let calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
+    
+          storedSessionTimeEntry.endTime = endTime;
+          storedSessionTimeEntry.durationInMilliseconds = calculatedDuration.toObject();
+      
+          var innerPromise = App.mongoDbOperations.updateOne("timeEntryId", sessionIdAsTimeEntryId, storedSessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
+          innerPromise.then(() => {
+            res.sendStatus(200);
+          });
+        });
 
-      res.sendStatus(200);
+      // https://docs.mongodb.com/manual/tutorial/update-documents/
+      // App.mongoDbOperations.updateOne("", currentSession.timeEntryId, updatedDocument, routesConfig.sessionTimEntriesCollectionName);
     });
 
 
@@ -337,7 +383,7 @@ export class App implements IApp {
     // necessary ?
     this.express.get('/' + routesConfig.viewsPrefix + '*', (request: Request, response: Response) => {
       // DEBUGGING:
-      Logger.instance.info('deliver view for:' + request.url);
+      // Logger.instance.info('deliver view for:' + request.url);
       // Logger.instance.info(pathStr);
 
       // TODO: necessary?

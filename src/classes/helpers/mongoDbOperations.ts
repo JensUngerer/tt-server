@@ -25,6 +25,68 @@ export class MonogDbOperations {
     return this.mongoClient.close();
   }
 
+  // https://docs.mongodb.com/manual/tutorial/update-documents/
+  public updateOne(idPropertyName: string, idPropertyValue: any, updatedDocumentEntry: any, collectionName: string) {
+    return new Promise<any>((resolve: (value: any) => void, reject: (value: any) => void) => {
+      if (this.connection === null) {
+        return;
+      }
+      this.connection.then((theMongoClient: any) => {
+        if (this.mongoClient === null) {
+          return;
+        }
+        // DEBUGGING:
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
+
+        const db = this.mongoClient.db(this.databaseName as string);
+        const collection = db.collection(collectionName);
+        const filter: any = {};
+        filter[idPropertyName] = idPropertyValue;
+        const updateQuery: any = {};
+        updateQuery.$set = {};
+        for (const key in updatedDocumentEntry) {
+          if (key === '_id')  {
+            continue;
+          }
+          if (Object.prototype.hasOwnProperty.call(updatedDocumentEntry, key)) {
+            const element = updatedDocumentEntry[key];
+            updateQuery.$set[key] = element;
+          }
+        }
+        collection.updateOne(filter, updateQuery, (err: any, result: any) => {
+          if (err) {
+            Logger.instance.error('updateOne-MongoDb-operation failed');
+            resolve(err);
+            return;
+          }
+
+          resolve(result);
+        });
+
+        // https://mongodb.github.io/node-mongodb-native/3.2/tutorials/crud/
+        // const updateObj: any = { $set: {} };
+        // updateObj.$set[propertyName] = propertyValue;
+
+        // // DEBUGGING:
+        // // Logger.instance.error('calling updateOne');
+        // // Logger.instance.error(JSON.stringify({
+        // //     queryObj,
+        // //     updateObj
+        // // }, null, 4));
+
+        // collection.updateOne(queryObj, updateObj, (err: any, result: any) => {
+        
+        // });
+      });
+      this.connection.catch((connectionErr: any) => {
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
+        resolve(connectionErr);
+      });
+    });
+  }
+
   public patchPush(propertyName: string, propertyValue: any, collectionName: string, queryObj: FilterQuery<any>) {
     return new Promise<any>((resolve: (value: any) => void, reject: (value: any) => void) => {
       if (this.connection === null) {
