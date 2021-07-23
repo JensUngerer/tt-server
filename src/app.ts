@@ -44,7 +44,7 @@ interface IUser extends Document<any> {
 export class App implements IApp {
   private readonly domain = process.env.DOMAIN;
 
-  private readonly csp = "default-src 'self';frame-src 'self';script-src 'self';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data:;connect-src " + this.domain + "";
+  private readonly csp = "default-src "  + this.domain + ";frame-src " + this.domain + ";script-src-elem " + this.domain + ";script-src 'unsafe-inline';style-src 'self' 'unsafe-inline';font-src "+ this.domain + ";img-src " + this.domain + " data:;connect-src "  + this.domain + "";
 
   private readonly relativePathToAppJs = './../../../client/dist/mtt-client';
 
