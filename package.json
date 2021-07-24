@@ -9,6 +9,7 @@
   },
   "license": "GPL",
   "scripts": {
+    "build-prod-linux": "node --max_old_space_size=4096 ./node_modules/webpack/bin/webpack.js --progress --env linux --stats-error-details true",
     "start:ci-windows": "node ./dist/%npm_package_name%",
     "start:ci-linux": "node ./dist/$npm_package_name",
     "start:dev-linux": "node --inspect ./dist/$npm_package_name",
