@@ -23,8 +23,9 @@ import { Logger } from './logger';
 import { ISessionTimeEntry } from '../../common/typescript/iSessionTimeEntry';
 import { v4 } from 'uuid';
 import { FilterQuery } from 'mongodb';
-import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator.js';
+import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
 import { Duration } from 'luxon';
+import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
 
 export interface IApp {
   configure(): void;
@@ -400,6 +401,7 @@ export class App implements IApp {
     this.express.use(routesConfig.project, projectRoute);
     this.express.use(routesConfig.timeEntries, timeEntries);
     this.express.use(routesConfig.bookingDeclaration, bookingDeclarationRoute);
+    this.express.use(routesConfig.sessionTimeEntry, sessionTimeEntryRoute);
   }
 
   public shutdown(): Promise<boolean> {
