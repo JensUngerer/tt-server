@@ -26,7 +26,7 @@ import { FilterQuery } from 'mongodb';
 import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
 import { Duration } from 'luxon';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
-import { Constants } from '../../common/typescript/constants.js';
+import { Constants } from '../../common/typescript/constants';
 
 export interface IApp {
   configure(): void;
