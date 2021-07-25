@@ -26,6 +26,7 @@ import { FilterQuery } from 'mongodb';
 import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
 import { Duration } from 'luxon';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
+import { Constants } from '../../common/typescript/constants.js';
 
 export interface IApp {
   configure(): void;
@@ -355,7 +356,7 @@ export class App implements IApp {
         // perform sessionTimeEntry logic
         // DEBUGGING:
       Logger.instance.info('Logout was successful');
-      
+
       Logger.instance.info("sessionId in logout-code:" + sessionIdAsTimeEntryId);
 
       const filterQuery: FilterQuery<any> =  {
@@ -366,15 +367,15 @@ export class App implements IApp {
           if (!docs || !docs.length) {
             return;
           }
-          var endTime = new Date();
-          var storedSessionTimeEntry = docs[0];
-          var startTime = storedSessionTimeEntry.startTime;
+          const endTime = new Date();
+          const storedSessionTimeEntry = docs[0];
+          const startTime = storedSessionTimeEntry.startTime;
           const calculatedMilliseconds = endTime.getTime() - startTime.getTime();
-          let calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
-          calculatedDuration.shiftTo();
+          const calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
+          calculatedDuration.shiftTo(...Constants.shiftToParameter);
           storedSessionTimeEntry.endTime = endTime;
           storedSessionTimeEntry.durationInMilliseconds = calculatedDuration.toObject();
-      
+
           var innerPromise = App.mongoDbOperations.updateOne("timeEntryId", sessionIdAsTimeEntryId, storedSessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
           innerPromise.then(() => {
             res.sendStatus(200);
