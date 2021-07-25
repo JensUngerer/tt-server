@@ -362,7 +362,7 @@ export class App implements IApp {
           var startTime = storedSessionTimeEntry.startTime;
           const calculatedMilliseconds = endTime.getTime() - startTime.getTime();
           let calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
-    
+          calculatedDuration.shiftTo();
           storedSessionTimeEntry.endTime = endTime;
           storedSessionTimeEntry.durationInMilliseconds = calculatedDuration.toObject();
       

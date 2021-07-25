@@ -21,24 +21,34 @@ export default {
                     resolve('');
                     return;
                 }
-                const firstAndSingleDocument = sessionTimeEntryDocs[0];
-                const storedDuration = firstAndSingleDocument.durationInMilliseconds as DurationObject;
-                if (storedDuration) {
-                    const duration = Duration.fromObject(storedDuration);
-                    const durationStr = duration.toFormat('hh:mm:ss');
-                    resolve(durationStr);
-                } else {
-                    const endTime = new Date();
-                    const startTime = firstAndSingleDocument.startTime;
-                    const timeSpanInMilliseconds = endTime.getTime() - startTime.getTime();
-                    const duration = Duration.fromMillis(timeSpanInMilliseconds);
-                    const durationStr = duration.toFormat('hh:mm:ss');
-                    resolve(durationStr);
+                if (sessionTimeEntryDocs.length > 1) {
+                    Logger.instance.error('more than one document found for sessionTimeEntry');
+                    resolve('');
+                    return;
+                }
+                try {
+                    const firstAndSingleDocument = sessionTimeEntryDocs[0]
+
+                    const storedDuration = firstAndSingleDocument.durationInMilliseconds as DurationObject;
+                    if (storedDuration) {
+                        const duration = Duration.fromObject(storedDuration);
+                        const durationStr = duration.toFormat('hh:mm:ss');
+                        resolve(durationStr);
+                    } else {
+                        const endTime = new Date();
+                        const startTime = firstAndSingleDocument.startTime;
+                        const timeSpanInMilliseconds = endTime.getTime() - startTime.getTime();
+                        const duration = Duration.fromMillis(timeSpanInMilliseconds);
+                        const durationStr = duration.toFormat('hh:mm:ss');
+                        resolve(durationStr);
+                    }
+                } catch (exception) {
+                    Logger.instance.error(exception);
                 }
             });
             timeEntriesPromise.catch((err: any) => {
                 Logger.instance.error(err);
-                resolve('00:00:00');
+                resolve('');
             });
         });
     }
