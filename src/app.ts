@@ -221,7 +221,10 @@ export class App implements IApp {
         // https://medium.com/@evangow/server-authentication-basics-express-sessions-passport-and-curl-359b7456003d
         // console.log('Inside the session middleware')
         // console.log(req.sessionID)
-        return v4() // use UUIDs for session IDs
+        Logger.instance.info("old session id:" + req.sessionID);
+        const newSessionId = v4();
+        Logger.instance.info("new sessionId:" + newSessionId);
+        return newSessionId; // use UUIDs for session IDs
       },
       secret: routesConfig.secret,
       resave: false,
@@ -318,6 +321,7 @@ export class App implements IApp {
           // DEBUGGING:
           Logger.instance.info('login was successful');
           var sessionIdAsTimeEntryId = req.sessionID;
+          Logger.instance.info("sessionId in login-code:" + sessionIdAsTimeEntryId);
           // const reqMock: Request = {} as Request;
           // reqMock.body = {};
           var startTime = new Date();
@@ -349,6 +353,8 @@ export class App implements IApp {
       Logger.instance.info('Logout was successful');
       
       const sessionIdAsTimeEntryId = req.sessionID;
+      Logger.instance.info("sessionId in logout-code:" + sessionIdAsTimeEntryId);
+
       const filterQuery: FilterQuery<any> =  {
         timeEntryId: sessionIdAsTimeEntryId
       };
