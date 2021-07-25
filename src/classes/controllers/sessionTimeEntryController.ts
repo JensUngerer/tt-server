@@ -25,6 +25,7 @@ export default {
       timeEntriesPromise.then((sessionTimeEntryDocs: ISessionTimeEntryDocument[]) => {
         if (!sessionTimeEntryDocs ||
           !sessionTimeEntryDocs.length) {
+          Logger.instance.error('sessionTimeEntryDocs.length:' + sessionTimeEntryDocs.length);
           resolve('');
           return;
         }
@@ -48,6 +49,7 @@ export default {
           }
         } catch (exception) {
           Logger.instance.error(exception);
+          resolve('');
         }
       });
       timeEntriesPromise.catch((err: any) => {
@@ -64,34 +66,40 @@ export default {
     return new Promise((resolve: (value?: any) => void) => {
       const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
       allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
-        if (!docsFromToDay ||
-          !docsFromToDay.length) {
-          resolve('');
-          return;
-        }
-        const durationSum = new DateTime();
-        for (const oneDocFromToday of docsFromToDay) {
-          const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
-          let oneDuration;
-          if (!oneDurationInMilliseconds) {
-            oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
-          } else {
-            oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+        try {
+          if (!docsFromToDay ||
+            !docsFromToDay.length) {
+            Logger.instance.error('no docs from today');
+            resolve('');
+            return;
           }
-          durationSum.plus(oneDuration);
+          const durationSum = new DateTime();
+          for (const oneDocFromToday of docsFromToDay) {
+            const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
+            let oneDuration;
+            if (!oneDurationInMilliseconds) {
+              oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
+            } else {
+              oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+            }
+            durationSum.plus(oneDuration);
+          }
+          const calculatedMilliseconds = durationSum.toMillis();
+
+          // DEBUGGING:
+          Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
+
+          const resultDuration = Duration.fromMillis(calculatedMilliseconds);
+          const resultStr = resultDuration.toFormat('hh:mm:ss');
+
+          // DEBUGGING:
+          Logger.instance.info('calculated working time duration:' + resultStr);
+
+          resolve(resultStr);
+        } catch (exception) {
+          Logger.instance.error(exception);
+          resolve('');
         }
-        const calculatedMilliseconds = durationSum.toMillis();
-
-        // DEBUGGING:
-        Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
-
-        const resultDuration = Duration.fromMillis(calculatedMilliseconds);
-        const resultStr = resultDuration.toFormat('hh:mm:ss');
-
-        // DEBUGGING:
-        Logger.instance.info('calculated working time duration:' + resultStr);
-
-        resolve(resultStr);
       });
       allSessionTimeEntriesFromTodayPromise.catch((err) => {
         Logger.instance.error(err);

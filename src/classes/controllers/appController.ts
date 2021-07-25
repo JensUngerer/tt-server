@@ -6,6 +6,7 @@ import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEnt
 import { Constants } from '../../../../common/typescript/constants';
 import { Duration } from 'luxon';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
+import { Logger } from '../../logger';
 
 export default {
   createSessionTimeEntryAtStart(mongoDbOperations: MonogDbOperations, sessionIdAsTimeEntryId: string) {
@@ -26,6 +27,7 @@ export default {
       const sessionTimeEntryPromise = mongoDbOperations.getFiltered(routes.sessionTimEntriesCollectionName, filterQuery);
       sessionTimeEntryPromise.then((docs: ISessionTimeEntry[]) => {
         if (!docs || !docs.length) {
+          resolve(false);
           return;
         }
         const endTime = new Date();
@@ -39,7 +41,12 @@ export default {
 
         var innerPromise = mongoDbOperations.updateOne('timeEntryId', sessionIdAsTimeEntryId, storedSessionTimeEntry, routes.sessionTimEntriesCollectionName);
         innerPromise.then(() => {
+          resolve(true);
         });
+      });
+      sessionTimeEntryPromise.catch((err) => {
+        Logger.instance.error(err);
+        resolve(false);
       });
     });
   },

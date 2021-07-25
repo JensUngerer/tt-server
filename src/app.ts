@@ -358,6 +358,7 @@ export class App implements IApp {
         });
         updateSessionTimeEntryAtStopPromise.catch((err: any) => {
           Logger.instance.error(err);
+          res.sendStatus(500);
         });
       });
       // TODO: necessary ?
