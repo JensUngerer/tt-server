@@ -20,9 +20,7 @@ import taskRoute from './classes/routes//taskRoute';
 import timeEntries from './classes/routes//timeEntries';
 import timeRecordRoutes from './classes/routes/timeRecordRoutes';
 import { Logger } from './logger';
-import { ISessionTimeEntry } from '../../common/typescript/iSessionTimeEntry';
 import { v4 } from 'uuid';
-import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
 import appController from './classes/controllers/appController';
 
@@ -321,17 +319,14 @@ export class App implements IApp {
           Logger.instance.info('login was successful');
           const sessionIdAsTimeEntryId = req.sessionID;
           Logger.instance.info('sessionId in login-code:' + sessionIdAsTimeEntryId);
-          // const reqMock: Request = {} as Request;
-          // reqMock.body = {};
-          const startTime = new Date();
-          const sessionTimeEntry: ISessionTimeEntry = {
-            startTime,
-            timeEntryId: sessionIdAsTimeEntryId,
-            day: DurationCalculator.getDayFrom(startTime),
-          };
-          App.mongoDbOperations.insertOne(sessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
-
-          res.sendStatus(200);
+          const createSessionTimeEntryPromise = appController.createSessionTimeEntryAtStart(App.mongoDbOperations, sessionIdAsTimeEntryId);
+          createSessionTimeEntryPromise.then(() => {
+            res.sendStatus(200);
+          });
+          createSessionTimeEntryPromise.catch((err) => {
+            Logger.instance.error(err);
+            res.sendStatus(500);
+          });
         });
       });
     });

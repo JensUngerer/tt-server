@@ -5,8 +5,18 @@ import routes from '../../../../common/typescript/routes.js';
 import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
 import { Constants } from '../../../../common/typescript/constants';
 import { Duration } from 'luxon';
+import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
+  createSessionTimeEntryAtStart(mongoDbOperations: MonogDbOperations, sessionIdAsTimeEntryId: string) {
+    const startTime = new Date();
+    const sessionTimeEntry: ISessionTimeEntry = {
+      startTime,
+      timeEntryId: sessionIdAsTimeEntryId,
+      day: DurationCalculator.getDayFrom(startTime),
+    };
+    return mongoDbOperations.insertOne(sessionTimeEntry, routes.sessionTimEntriesCollectionName);
+  },
   updateSessionTimeEntryAtStop(mongoDbOperations: MonogDbOperations, sessionIdAsTimeEntryId: string) {
     return new Promise((resolve: (value?: any) => void) => {
 
