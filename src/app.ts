@@ -22,11 +22,9 @@ import timeRecordRoutes from './classes/routes/timeRecordRoutes';
 import { Logger } from './logger';
 import { ISessionTimeEntry } from '../../common/typescript/iSessionTimeEntry';
 import { v4 } from 'uuid';
-import { FilterQuery } from 'mongodb';
 import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
-import { Duration } from 'luxon';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
-import { Constants } from '../../common/typescript/constants';
+import appController from './classes/controllers/appController';
 
 export interface IApp {
   configure(): void;
@@ -46,7 +44,7 @@ interface IUser extends Document<any> {
 export class App implements IApp {
   private readonly domain = process.env.DOMAIN;
 
-  private readonly csp = "default-src "  + this.domain + ";frame-src " + this.domain + ";script-src-elem " + this.domain + ";script-src 'unsafe-inline';style-src 'self' 'unsafe-inline';font-src "+ this.domain + ";img-src " + this.domain + " data:;connect-src "  + this.domain + "";
+  private readonly csp = "default-src " + this.domain + ";frame-src " + this.domain + ";script-src-elem " + this.domain + ";script-src 'unsafe-inline';style-src 'self' 'unsafe-inline';font-src " + this.domain + ";img-src " + this.domain + " data:;connect-src " + this.domain + "";
 
   private readonly relativePathToAppJs = './../../../client/dist/mtt-client';
 
@@ -89,12 +87,12 @@ export class App implements IApp {
     const cert = readFileSync(App.absolutePathToCert);
     const options: ServerOptions = {
       key: key,
-      cert: cert
+      cert: cert,
     };
     this.server = https.createServer(options, this.express);
     this.server.listen(port, hostname, () => {
       Logger.instance.info('successfully started on: ' + hostname + ':' + port);
-    })
+    });
     // this.server = this.express.listen(port, hostname, () => {
     // });
 
@@ -179,7 +177,7 @@ export class App implements IApp {
     this.express.use(helmet());
 
     const corsConfig: any = {
-      origin: this.domain
+      origin: this.domain,
     };
 
     this.express.use('/', cors(corsConfig), (req: Request, res: Response, next: NextFunction) => {
@@ -187,7 +185,7 @@ export class App implements IApp {
       // Logger.instance.info('cors:' + req.url);
 
       // csp
-      res.setHeader("Content-Security-Policy", this.csp);
+      res.setHeader('Content-Security-Policy', this.csp);
 
       // Website you wish to allow to connect
       // res.setHeader('Access-Control-Allow-Origin', req.headers.origin ? req.headers.origin.toString() : '');
@@ -197,13 +195,13 @@ export class App implements IApp {
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
       // Request headers you wish to allow
-      res.setHeader('Access-Control-Allow-Headers', "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept");
+      res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
 
       // Set to true if you need the website to include cookies in the requests sent
       // to the API (e.g. in case you use sessions)
       res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-      if ("OPTIONS" == req.method) {
+      if ('OPTIONS' == req.method) {
         // console.log('OPTIONS');
         next();
       } else {
@@ -222,9 +220,9 @@ export class App implements IApp {
         // https://medium.com/@evangow/server-authentication-basics-express-sessions-passport-and-curl-359b7456003d
         // console.log('Inside the session middleware')
         // console.log(req.sessionID)
-        Logger.instance.info("old session id:" + req.sessionID);
+        Logger.instance.info('old session id:' + req.sessionID);
         const newSessionId = v4();
-        Logger.instance.info("new sessionId:" + newSessionId);
+        Logger.instance.info('new sessionId:' + newSessionId);
         return newSessionId; // use UUIDs for session IDs
       },
       secret: routesConfig.secret,
@@ -261,7 +259,7 @@ export class App implements IApp {
         '/' + routesConfig.viewsPrefix + 'login',
         '/api/login',
         '/api/login-status',
-        '/api/logout'
+        '/api/logout',
       ];
       let isAllowed = false;
       allowedUrls.forEach((oneAllowedUrlPrefix: string) => {
@@ -321,15 +319,15 @@ export class App implements IApp {
 
           // DEBUGGING:
           Logger.instance.info('login was successful');
-          var sessionIdAsTimeEntryId = req.sessionID;
-          Logger.instance.info("sessionId in login-code:" + sessionIdAsTimeEntryId);
+          const sessionIdAsTimeEntryId = req.sessionID;
+          Logger.instance.info('sessionId in login-code:' + sessionIdAsTimeEntryId);
           // const reqMock: Request = {} as Request;
           // reqMock.body = {};
-          var startTime = new Date();
+          const startTime = new Date();
           const sessionTimeEntry: ISessionTimeEntry = {
             startTime,
             timeEntryId: sessionIdAsTimeEntryId,
-            day: DurationCalculator.getDayFrom(startTime)
+            day: DurationCalculator.getDayFrom(startTime),
           };
           App.mongoDbOperations.insertOne(sessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
 
@@ -355,31 +353,16 @@ export class App implements IApp {
 
         // perform sessionTimeEntry logic
         // DEBUGGING:
-      Logger.instance.info('Logout was successful');
+        Logger.instance.info('Logout was successful');
 
-      Logger.instance.info("sessionId in logout-code:" + sessionIdAsTimeEntryId);
+        Logger.instance.info('sessionId in logout-code:' + sessionIdAsTimeEntryId);
 
-      const filterQuery: FilterQuery<any> =  {
-        timeEntryId: sessionIdAsTimeEntryId
-      };
-      const sessionTimeEntryPromise = App.mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, filterQuery);
-      sessionTimeEntryPromise.then((docs: ISessionTimeEntry[]) => {
-          if (!docs || !docs.length) {
-            return;
-          }
-          const endTime = new Date();
-          const storedSessionTimeEntry = docs[0];
-          const startTime = storedSessionTimeEntry.startTime;
-          const calculatedMilliseconds = endTime.getTime() - startTime.getTime();
-          const calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
-          calculatedDuration.shiftTo(...Constants.shiftToParameter);
-          storedSessionTimeEntry.endTime = endTime;
-          storedSessionTimeEntry.durationInMilliseconds = calculatedDuration.toObject();
-
-          var innerPromise = App.mongoDbOperations.updateOne("timeEntryId", sessionIdAsTimeEntryId, storedSessionTimeEntry, routesConfig.sessionTimEntriesCollectionName);
-          innerPromise.then(() => {
-            res.sendStatus(200);
-          });
+        const updateSessionTimeEntryAtStopPromise = appController.updateSessionTimeEntryAtStop(App.mongoDbOperations, sessionIdAsTimeEntryId);
+        updateSessionTimeEntryAtStopPromise.then(() => {
+          res.sendStatus(200);
+        });
+        updateSessionTimeEntryAtStopPromise.catch((err: any) => {
+          Logger.instance.error(err);
         });
       });
       // TODO: necessary ?
@@ -389,7 +372,6 @@ export class App implements IApp {
       // https://docs.mongodb.com/manual/tutorial/update-documents/
       // App.mongoDbOperations.updateOne("", currentSession.timeEntryId, updatedDocument, routesConfig.sessionTimEntriesCollectionName);
     });
-
 
     // https://stackoverflow.com/questions/25216761/express-js-redirect-to-default-page-instead-of-cannot-get
     // https://stackoverflow.com/questions/30546524/making-angular-routes-work-with-express-routes
