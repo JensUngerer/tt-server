@@ -343,16 +343,19 @@ export class App implements IApp {
 
     // Visiting this route logs the user out
     this.express.post('/api/logout', (req, res, next) => {
+      const sessionIdAsTimeEntryId = req.sessionID;
+
       req.logout();
+      // https://stackoverflow.com/questions/50454992/req-session-destroy-and-passport-logout-arent-destroying-cookie-on-client-side
+      req.session.destroy((destroyErr) => {
+        res.clearCookie('connect.sid');
+        // Don't redirect, just print text
+        // res.send('Logged out');
 
-      // TODO: necessary ?
-      // res.setHeader("Content-Security-Policy", this.csp);
-      // res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-      // DEBUGGING:
+        // perform sessionTimeEntry logic
+        // DEBUGGING:
       Logger.instance.info('Logout was successful');
       
-      const sessionIdAsTimeEntryId = req.sessionID;
       Logger.instance.info("sessionId in logout-code:" + sessionIdAsTimeEntryId);
 
       const filterQuery: FilterQuery<any> =  {
@@ -377,6 +380,10 @@ export class App implements IApp {
             res.sendStatus(200);
           });
         });
+      });
+      // TODO: necessary ?
+      // res.setHeader("Content-Security-Policy", this.csp);
+      // res.setHeader('Access-Control-Allow-Credentials', 'true');
 
       // https://docs.mongodb.com/manual/tutorial/update-documents/
       // App.mongoDbOperations.updateOne("", currentSession.timeEntryId, updatedDocument, routesConfig.sessionTimEntriesCollectionName);
