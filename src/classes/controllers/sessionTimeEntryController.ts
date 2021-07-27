@@ -59,12 +59,17 @@ export default {
     });
   },
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
-    const queryObj: FilterQuery<any> = {};
+
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
     var dayStr = DurationCalculator.getDayFrom(now).toISOString();
-    queryObj.day = {
-      $toDate: dayStr,
+    var nextDayStr = DurationCalculator.getNextDayFrom(now).toISOString();
+    // queryObj.day = {
+    //   $toDate: dayStr,
+    // };
+    const queryObj: FilterQuery<any> = {
+      $gte : dayStr,
+      $lt: nextDayStr,
     };
 
     return new Promise((resolve: (value?: any) => void) => {
