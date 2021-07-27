@@ -61,7 +61,7 @@ export default {
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
     const queryObj: FilterQuery<any> = {};
     const now = new Date();
-    queryObj.day = DurationCalculator.getDayFrom(now);
+    queryObj.day = DurationCalculator.getDayFrom(now).toISOString();
 
     return new Promise((resolve: (value?: any) => void) => {
       const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
