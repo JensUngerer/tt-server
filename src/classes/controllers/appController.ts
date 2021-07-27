@@ -34,8 +34,8 @@ export default {
         const storedSessionTimeEntry = docs[0];
         const startTime = storedSessionTimeEntry.startTime;
         const calculatedMilliseconds = endTime.getTime() - startTime.getTime();
-        const calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
-        calculatedDuration.shiftTo(...Constants.shiftToParameter);
+        let calculatedDuration = Duration.fromMillis(calculatedMilliseconds);
+        calculatedDuration = calculatedDuration.shiftTo(...Constants.shiftToParameter);
         storedSessionTimeEntry.endTime = endTime;
         storedSessionTimeEntry.durationInMilliseconds = calculatedDuration.toObject();
 
