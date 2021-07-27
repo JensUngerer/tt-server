@@ -61,7 +61,11 @@ export default {
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
     const queryObj: FilterQuery<any> = {};
     const now = new Date();
-    queryObj.day = new Date(DurationCalculator.getDayFrom(now).toISOString());
+    // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
+    var dayStr = DurationCalculator.getDayFrom(now).toISOString();
+    queryObj.day = {
+      $toDate: dayStr,
+    };
 
     return new Promise((resolve: (value?: any) => void) => {
       const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
