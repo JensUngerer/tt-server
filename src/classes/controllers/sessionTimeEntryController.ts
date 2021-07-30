@@ -68,11 +68,13 @@ export default {
     //   $toDate: dayStr,
     // };
     const queryObj: FilterQuery<any> = {
-      day: {
+      startTime: {
         $gte: dayStr,
         $lt: nextDayStr,
       },
     };
+
+    Logger.instance.info(JSON.stringify(queryObj, null, 4));
 
     return new Promise((resolve: (value?: any) => void) => {
       const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
