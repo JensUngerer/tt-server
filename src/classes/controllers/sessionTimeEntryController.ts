@@ -68,8 +68,10 @@ export default {
     //   $toDate: dayStr,
     // };
     const queryObj: FilterQuery<any> = {
-      $gte : dayStr,
-      $lt: nextDayStr,
+      day: {
+        $gte: dayStr,
+        $lt: nextDayStr,
+      },
     };
 
     return new Promise((resolve: (value?: any) => void) => {
