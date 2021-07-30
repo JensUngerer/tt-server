@@ -62,8 +62,8 @@ export default {
 
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
-    var dayStr = DurationCalculator.getDayFrom(now).toISOString();
-    var nextDayStr = DurationCalculator.getNextDayFrom(now).toISOString();
+    const dayStr = DurationCalculator.getDayFrom(now);//.toISOString();
+    const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
     // queryObj.day = {
     //   $toDate: dayStr,
     // };
