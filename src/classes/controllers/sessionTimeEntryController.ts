@@ -47,6 +47,14 @@ export default {
             const durationStr = duration.toFormat('hh:mm:ss');
             resolve(durationStr);
           }
+
+          const workingTimeDurationStrPromise = this.getWorkingTimeDurationStr(mongoDbOperations);
+          workingTimeDurationStrPromise.then((workingTime: string) => {
+            Logger.instance.info('working time:' + workingTime);
+          });
+          workingTimeDurationStrPromise.catch((error) => {
+            Logger.instance.error(error);
+          });
         } catch (exception) {
           Logger.instance.error(exception);
           resolve('');
@@ -59,27 +67,36 @@ export default {
     });
   },
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
-
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
     const dayStr = DurationCalculator.getDayFrom(now);//.toISOString();
     const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
-    // queryObj.day = {
-    //   $toDate: dayStr,
-    // };
+    const gteStartTime =
+    {
+      $dateFromString: {
+        dateString: dayStr.toDateString(),
+      },
+    };
+    const ltStartTime =
+    {
+      $dateFromString: {
+        dateString: nextDayStr.toDateString(),
+      },
+    };
     const queryObj: FilterQuery<any> = {
       startTime: {
-        $gte: dayStr,
-        $lt: nextDayStr,
+        $gte: gteStartTime,
+        $lt: ltStartTime,
       },
     };
 
     Logger.instance.info(JSON.stringify(queryObj, null, 4));
 
     return new Promise((resolve: (value?: any) => void) => {
-      const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
-      allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
-        try {
+      try {
+        const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
+        allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
+
           if (!docsFromToDay ||
             !docsFromToDay.length) {
             Logger.instance.error('no docs from today');
@@ -109,15 +126,16 @@ export default {
           Logger.instance.info('calculated working time duration:' + resultStr);
 
           resolve(resultStr);
-        } catch (exception) {
-          Logger.instance.error(exception);
+        });
+        allSessionTimeEntriesFromTodayPromise.catch((err) => {
+          Logger.instance.error(err);
           resolve('');
-        }
-      });
-      allSessionTimeEntriesFromTodayPromise.catch((err) => {
-        Logger.instance.error(err);
+        });
+
+      } catch (exception) {
+        Logger.instance.error(exception);
         resolve('');
-      });
+      }
     });
   },
 };
