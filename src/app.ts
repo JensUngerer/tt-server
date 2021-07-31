@@ -129,7 +129,7 @@ export class App implements IApp {
 
   public static configureLogger(loggingFileName: string) {
     // const absolutePathToLoggingFolder: string = resolve(App.absolutePathToAppJs, relativePathToLoggingFolder);
-    const absolutePathToLoggingFolder = '/var/log/time-tracker';
+    const absolutePathToLoggingFolder = '/var/log/timeTracker';
     if (!existsSync(absolutePathToLoggingFolder)) {
       mkdirSync(absolutePathToLoggingFolder);
     }
