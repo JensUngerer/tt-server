@@ -69,9 +69,9 @@ export default {
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
-    const dayStr = DurationCalculator.getDayFrom(now).toISOString();
+    let dayStr = DurationCalculator.getDayFrom(now).toISOString();
     // https://stackoverflow.com/questions/952924/javascript-chop-slice-trim-off-last-character-in-string
-    // dayStr = dayStr.substring(0, dayStr.length-1);
+    dayStr = dayStr.substring(0, 10);
     // const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
     // nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
     // const format = '%Y-%m-%dT%H:%M:%S.%L';
