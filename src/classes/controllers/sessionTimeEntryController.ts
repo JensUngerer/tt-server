@@ -74,16 +74,22 @@ export default {
     dayStr = dayStr.substring(0, dayStr.length-1);
     let nextDayStr = DurationCalculator.getNextDayFrom(now).toISOString();
     nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
+    const format = '%Y-%m-%dT%H:%M:%S.%L';
+    const timezone = 'UTC';
     const gteStartTime =
     {
       $dateFromString: {
         dateString: dayStr,
+        format,
+        timezone,
       },
     };
     const ltStartTime =
     {
       $dateFromString: {
         dateString: nextDayStr,
+        format,
+        timezone,
       },
     };
     const queryObj: FilterQuery<any> = {
