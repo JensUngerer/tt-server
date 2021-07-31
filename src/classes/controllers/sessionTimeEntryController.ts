@@ -100,7 +100,9 @@ export default {
     // };
     const queryObj: FilterQuery<any> = {
       day: {
-        $eq: dayStr,
+        $eq: {
+          $toDate: dayStr,
+        },
       },
     };
 
