@@ -69,33 +69,38 @@ export default {
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
-    let dayStr = DurationCalculator.getDayFrom(now).toISOString();
+    const dayStr = DurationCalculator.getDayFrom(now);//.toISOString();
     // https://stackoverflow.com/questions/952924/javascript-chop-slice-trim-off-last-character-in-string
-    dayStr = dayStr.substring(0, dayStr.length-1);
-    let nextDayStr = DurationCalculator.getNextDayFrom(now).toISOString();
-    nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
-    const format = '%Y-%m-%dT%H:%M:%S.%L';
-    const timezone = 'UTC';
-    const gteStartTime =
-    {
-      $dateFromString: {
-        dateString: dayStr,
-        format,
-        timezone,
-      },
-    };
-    const ltStartTime =
-    {
-      $dateFromString: {
-        dateString: nextDayStr,
-        format,
-        timezone,
-      },
-    };
+    // dayStr = dayStr.substring(0, dayStr.length-1);
+    // const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
+    // nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
+    // const format = '%Y-%m-%dT%H:%M:%S.%L';
+    // const timezone = 'UTC';
+    // const gteStartTime =
+    // {
+    //   $dateFromString: {
+    //     dateString: dayStr,
+    //     format,
+    //     timezone,
+    //   },
+    // };
+    // const ltStartTime =
+    // {
+    //   $dateFromString: {
+    //     dateString: nextDayStr,
+    //     format,
+    //     timezone,
+    //   },
+    // };
+    // const queryObj: FilterQuery<any> = {
+    //   startTime: {
+    //     $gte: gteStartTime,
+    //     $lt: ltStartTime,
+    //   },
+    // };
     const queryObj: FilterQuery<any> = {
-      startTime: {
-        $gte: gteStartTime,
-        $lt: ltStartTime,
+      day: {
+        $eq: dayStr,
       },
     };
 
@@ -105,7 +110,6 @@ export default {
       try {
         const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
         allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
-
           if (!docsFromToDay ||
             !docsFromToDay.length) {
             Logger.instance.error('no docs from today');
@@ -140,7 +144,6 @@ export default {
           Logger.instance.error(err);
           resolve('');
         });
-
       } catch (exception) {
         Logger.instance.error(exception);
         resolve('');
