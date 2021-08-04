@@ -48,13 +48,13 @@ export default {
             resolve(durationStr);
           }
 
-          const workingTimeDurationStrPromise = this.getWorkingTimeDurationStr(mongoDbOperations);
-          workingTimeDurationStrPromise.then((workingTime: string) => {
-            Logger.instance.info('working time:' + workingTime);
-          });
-          workingTimeDurationStrPromise.catch((error) => {
-            Logger.instance.error(error);
-          });
+          // const workingTimeDurationStrPromise = this.getWorkingTimeDurationStr(mongoDbOperations);
+          // workingTimeDurationStrPromise.then((workingTime: string) => {
+          //   Logger.instance.info('working time:' + workingTime);
+          // });
+          // workingTimeDurationStrPromise.catch((error) => {
+          //   Logger.instance.error(error);
+          // });
         } catch (exception) {
           Logger.instance.error(exception);
           resolve('');
@@ -66,101 +66,101 @@ export default {
       });
     });
   },
-  getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
-    const now = new Date();
-    // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
-    const dayStr = DurationCalculator.getDayFrom(now).toISOString();
-    // https://stackoverflow.com/questions/952924/javascript-chop-slice-trim-off-last-character-in-string
-    // dayStr = dayStr.substring(0, 10);
-    // const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
-    // nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
-    // const format = '%Y-%m-%dT%H:%M:%S.%L';
-    // const timezone = 'UTC';
-    // const gteStartTime =
-    // {
-    //   $dateFromString: {
-    //     dateString: dayStr,
-    //     format,
-    //     timezone,
-    //   },
-    // };
-    // const ltStartTime =
-    // {
-    //   $dateFromString: {
-    //     dateString: nextDayStr,
-    //     format,
-    //     timezone,
-    //   },
-    // };
-    // const queryObj: FilterQuery<any> = {
-    //   startTime: {
-    //     $gte: gteStartTime,
-    //     $lt: ltStartTime,
-    //   },
-    // };
-    // const queryObj: FilterQuery<any> = {
-    //   day: {
-    //     $eq: {
-    //       $toDate: dayStr,
-    //     },
-    //   },
-    // };
-    const queryObj: FilterQuery<any> = {};
-    Logger.instance.info(JSON.stringify(queryObj, null, 4));
+  // getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
+  //   const now = new Date();
+  //   // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
+  //   const dayStr = DurationCalculator.getDayFrom(now).toISOString();
+  //   // https://stackoverflow.com/questions/952924/javascript-chop-slice-trim-off-last-character-in-string
+  //   // dayStr = dayStr.substring(0, 10);
+  //   // const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
+  //   // nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
+  //   // const format = '%Y-%m-%dT%H:%M:%S.%L';
+  //   // const timezone = 'UTC';
+  //   // const gteStartTime =
+  //   // {
+  //   //   $dateFromString: {
+  //   //     dateString: dayStr,
+  //   //     format,
+  //   //     timezone,
+  //   //   },
+  //   // };
+  //   // const ltStartTime =
+  //   // {
+  //   //   $dateFromString: {
+  //   //     dateString: nextDayStr,
+  //   //     format,
+  //   //     timezone,
+  //   //   },
+  //   // };
+  //   // const queryObj: FilterQuery<any> = {
+  //   //   startTime: {
+  //   //     $gte: gteStartTime,
+  //   //     $lt: ltStartTime,
+  //   //   },
+  //   // };
+  //   // const queryObj: FilterQuery<any> = {
+  //   //   day: {
+  //   //     $eq: {
+  //   //       $toDate: dayStr,
+  //   //     },
+  //   //   },
+  //   // };
+  //   const queryObj: FilterQuery<any> = {};
+  //   Logger.instance.info(JSON.stringify(queryObj, null, 4));
 
-    return new Promise((resolve: (value?: any) => void) => {
-      try {
-        const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
-        allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
-          if (!docsFromToDay ||
-            !docsFromToDay.length) {
-            Logger.instance.error('no docs from today');
-            resolve('');
-            return;
-          }
+  //   return new Promise((resolve: (value?: any) => void) => {
+  //     try {
+  //       const allSessionTimeEntriesFromTodayPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
+  //       allSessionTimeEntriesFromTodayPromise.then((docsFromToDay: ISessionTimeEntryDocument[]) => {
+  //         if (!docsFromToDay ||
+  //           !docsFromToDay.length) {
+  //           Logger.instance.error('no docs from today');
+  //           resolve('');
+  //           return;
+  //         }
 
-          const filteredDocs = docsFromToDay.filter((oneDoc: ISessionTimeEntryDocument) => {
-            return oneDoc.day?.toISOString() === dayStr;
-          });
-          if (!filteredDocs ||
-            !filteredDocs.length) {
-            Logger.instance.error('no docs for:' + dayStr);
-            resolve('');
-            return;
-          }
+  //         const filteredDocs = docsFromToDay.filter((oneDoc: ISessionTimeEntryDocument) => {
+  //           return oneDoc.day?.toISOString() === dayStr;
+  //         });
+  //         if (!filteredDocs ||
+  //           !filteredDocs.length) {
+  //           Logger.instance.error('no docs for:' + dayStr);
+  //           resolve('');
+  //           return;
+  //         }
 
-          const durationSum = new DateTime();
-          for (const oneDocFromToday of filteredDocs) {
-            const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
-            let oneDuration;
-            if (!oneDurationInMilliseconds) {
-              oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
-            } else {
-              oneDuration = Duration.fromObject(oneDurationInMilliseconds);
-            }
-            durationSum.plus(oneDuration);
-          }
-          const calculatedMilliseconds = durationSum.toMillis();
+  //         const durationSum = new DateTime();
+  //         for (const oneDocFromToday of filteredDocs) {
+  //           const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
+  //           let oneDuration;
+  //           if (!oneDurationInMilliseconds) {
+  //             oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
+  //           } else {
+  //             oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+  //           }
+  //           durationSum.plus(oneDuration);
+  //         }
+  //         const calculatedMilliseconds = durationSum.toMillis();
 
-          // DEBUGGING:
-          Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
+  //         // DEBUGGING:
+  //         Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
 
-          const resultDuration = Duration.fromMillis(calculatedMilliseconds);
-          const resultStr = resultDuration.toFormat('hh:mm:ss');
+  //         const resultDuration = Duration.fromMillis(calculatedMilliseconds);
+  //         const resultStr = resultDuration.toFormat('hh:mm:ss');
 
-          // DEBUGGING:
-          Logger.instance.info('calculated working time duration:' + resultStr);
+  //         // DEBUGGING:
+  //         Logger.instance.info('calculated working time duration:' + resultStr);
 
-          resolve(resultStr);
-        });
-        allSessionTimeEntriesFromTodayPromise.catch((err) => {
-          Logger.instance.error(err);
-          resolve('');
-        });
-      } catch (exception) {
-        Logger.instance.error(exception);
-        resolve('');
-      }
-    });
-  },
+  //         resolve(resultStr);
+  //       });
+  //       allSessionTimeEntriesFromTodayPromise.catch((err) => {
+  //         Logger.instance.error(err);
+  //         resolve('');
+  //       });
+  //     } catch (exception) {
+  //       Logger.instance.error(exception);
+  //       resolve('');
+  //     }
+  //   });
+  // },
 };

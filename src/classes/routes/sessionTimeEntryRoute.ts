@@ -23,16 +23,16 @@ const getSessionTimeEntry = async (req: Request, res: Response) => {
   res.send(stringifiedResponse);
 };
 
-const getWorkingTime = async (req: Request, res: Response) => {
-  const response = await sessionTimeEntryController.getWorkingTimeDurationStr(App.mongoDbOperations);
-  const stringifiedResponse = Serialization.serialize(response);
-  res.send(stringifiedResponse);
-};
+// const getWorkingTime = async (req: Request, res: Response) => {
+//   const response = await sessionTimeEntryController.getWorkingTimeDurationStr(App.mongoDbOperations);
+//   const stringifiedResponse = Serialization.serialize(response);
+//   res.send(stringifiedResponse);
+// };
 
 const rootRoute = router.route('/');
 rootRoute.get(getSessionTimeEntry);
 
-const workingTimeRoute = router.route(routesConfig.workingTimeSuffix);
-workingTimeRoute.get(getWorkingTime);
+// const workingTimeRoute = router.route(routesConfig.workingTimeSuffix);
+// workingTimeRoute.get(getWorkingTime);
 
 export default router;
