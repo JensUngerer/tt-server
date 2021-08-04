@@ -69,9 +69,9 @@ export default {
   getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {
     const now = new Date();
     // https://stackoverflow.com/questions/30872891/convert-string-to-isodate-in-mongodb/30878727
-    let dayStr = DurationCalculator.getDayFrom(now).toISOString();
+    const dayStr = DurationCalculator.getDayFrom(now).toISOString();
     // https://stackoverflow.com/questions/952924/javascript-chop-slice-trim-off-last-character-in-string
-    dayStr = dayStr.substring(0, 10);
+    // dayStr = dayStr.substring(0, 10);
     // const nextDayStr = DurationCalculator.getNextDayFrom(now);//.toISOString();
     // nextDayStr = nextDayStr.substring(0, nextDayStr.length-1);
     // const format = '%Y-%m-%dT%H:%M:%S.%L';
@@ -98,14 +98,14 @@ export default {
     //     $lt: ltStartTime,
     //   },
     // };
-    const queryObj: FilterQuery<any> = {
-      day: {
-        $eq: {
-          $toDate: dayStr,
-        },
-      },
-    };
-
+    // const queryObj: FilterQuery<any> = {
+    //   day: {
+    //     $eq: {
+    //       $toDate: dayStr,
+    //     },
+    //   },
+    // };
+    const queryObj: FilterQuery<any> = {};
     Logger.instance.info(JSON.stringify(queryObj, null, 4));
 
     return new Promise((resolve: (value?: any) => void) => {
@@ -118,8 +118,19 @@ export default {
             resolve('');
             return;
           }
+
+          const filteredDocs = docsFromToDay.filter((oneDoc: ISessionTimeEntryDocument) => {
+            return oneDoc.day?.toISOString() === dayStr;
+          });
+          if (!filteredDocs ||
+            !filteredDocs.length) {
+            Logger.instance.error('no docs for:' + dayStr);
+            resolve('');
+            return;
+          }
+
           const durationSum = new DateTime();
-          for (const oneDocFromToday of docsFromToDay) {
+          for (const oneDocFromToday of filteredDocs) {
             const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
             let oneDuration;
             if (!oneDurationInMilliseconds) {
