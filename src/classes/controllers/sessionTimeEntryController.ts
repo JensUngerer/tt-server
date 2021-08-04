@@ -4,9 +4,9 @@ import { ISessionTimeEntryDocument } from './../../../../common/typescript/mongo
 
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
-import { DateTime, Duration, DurationObject } from 'luxon';
+import { /*DateTime,*/ Duration, DurationObject } from 'luxon';
 import { Logger } from '../../logger';
-import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
+// import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
   getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ISessionTimeEntryDocument) {
