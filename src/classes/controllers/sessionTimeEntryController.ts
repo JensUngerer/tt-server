@@ -4,8 +4,9 @@ import { ISessionTimeEntryDocument } from './../../../../common/typescript/mongo
 
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
-import { DateTime, Duration, DurationObject } from 'luxon';
+import { Duration, DurationObject } from 'luxon';
 import { Logger } from '../../logger';
+import { Constants } from '../../../../common/typescript/constants';
 // import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
@@ -75,7 +76,9 @@ export default {
     try {
       Logger.instance.info(JSON.stringify(docs, null, 4));
 
-      let durationSum = DateTime.fromObject({year: 0, month: 0, day: 0, hour: 0, minute: 0, millisecond: 0});
+      let durationSum = Duration.fromObject({years: 0, months: 0, days: 0, hour: 0, minutes: 0, milliseconds: 0});
+      durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
+      // DateTime.fromObject({years: 0, months: 0, days: 0, hour: 0, minutes: 0, milliseconds: 0});
 
       Logger.instance.info('dateTime crated');
 
@@ -92,11 +95,14 @@ export default {
           Logger.instance.info(JSON.stringify(oneDurationInMilliseconds, null, 4));
 
           oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+          oneDuration = oneDuration.shiftTo(...Constants.shiftToParameter);
 
-          Logger.instance.info(JSON.stringify(oneDuration));
-          Logger.instance.info(oneDuration.toString());
+          Logger.instance.info(JSON.stringify(oneDuration.toObject(), null, 4));
+          // Logger.instance.info(JSON.stringify(oneDuration));
+          // Logger.instance.info(oneDuration.toString());
         }
         durationSum = durationSum.plus(oneDuration);
+        durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
         Logger.instance.info(durationSum.toString());
       }
 
