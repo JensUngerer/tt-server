@@ -10,11 +10,16 @@ import { Logger } from '../../logger';
 
 export default {
   getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ISessionTimeEntryDocument) {
-    const endTime = new Date();
-    const startTime = sessionTimeEntry.startTime;
-    const timeSpanInMilliseconds = endTime.getTime() - startTime.getTime();
-    const duration = Duration.fromMillis(timeSpanInMilliseconds);
-    return duration;
+    try {
+      const endTime = new Date();
+      const startTime = sessionTimeEntry.startTime;
+      const timeSpanInMilliseconds = endTime.getTime() - startTime.getTime();
+      const duration = Duration.fromMillis(timeSpanInMilliseconds);
+      return duration;
+    } catch (exception) {
+      Logger.instance.error(exception);
+      return new Duration();
+    }
   },
   getDurationStr(timeEntryId: string, mongoDbOperations: MonogDbOperations) {
     const queryObj: FilterQuery<any> = {};
@@ -67,29 +72,35 @@ export default {
     });
   },
   getTimeStrFromSessionTimeEntry(docs: ISessionTimeEntryDocument[]) {
-    const durationSum = new DateTime();
-    for (const oneDocFromToday of docs) {
-      const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
-      let oneDuration;
-      if (!oneDurationInMilliseconds) {
-        oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
-      } else {
-        oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+    try {
+      const durationSum = new DateTime();
+      for (const oneDocFromToday of docs) {
+        const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
+        let oneDuration;
+        if (!oneDurationInMilliseconds) {
+          oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
+        } else {
+          oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+        }
+        durationSum.plus(oneDuration);
       }
-      durationSum.plus(oneDuration);
+      const calculatedMilliseconds = durationSum.toMillis();
+
+      // DEBUGGING:
+      Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
+
+      const resultDuration = Duration.fromMillis(calculatedMilliseconds);
+      const resultStr = resultDuration.toFormat('hh:mm:ss');
+
+      // DEBUGGING:
+      Logger.instance.info('calculated working time duration:' + resultStr);
+
+      return resultStr;
+    } catch (exception: any) {
+      Logger.instance.error(exception);
+      return '';
     }
-    const calculatedMilliseconds = durationSum.toMillis();
 
-    // DEBUGGING:
-    Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
-
-    const resultDuration = Duration.fromMillis(calculatedMilliseconds);
-    const resultStr = resultDuration.toFormat('hh:mm:ss');
-
-    // DEBUGGING:
-    Logger.instance.info('calculated working time duration:' + resultStr);
-
-    return resultStr;
   },
   getWorkingTimeByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
     return new Promise((resolve: (value: string) => void) => {
