@@ -4,6 +4,64 @@ import * as routes from '../../../../common/typescript/routes.js';
 import { Logger } from './../../logger';
 
 export class MonogDbOperations {
+  filterByDay(collectionName: any, selectedDay: Date) {
+    return new Promise((resolve: (value?: any) => void) => {
+      if (this.connection === null) {
+        return;
+      }
+      this.connection.then((theMongoClient: MongoClient) => {
+        if (!theMongoClient) {
+          Logger.instance.error('no mongodb client');
+          resolve([]);
+          return;
+        }
+        const db = theMongoClient.db(this.databaseName || undefined);
+        if (!db) {
+          Logger.instance.error('no db found for:' + this.databaseName);
+          resolve([]);
+          return;
+        }
+        const collection = db.collection(collectionName);
+        if (!collection) {
+          Logger.instance.error('no collection found for:' + collectionName);
+          resolve([]);
+          return;
+        }
+        const queryObj: FilterQuery<any> = {
+          day: {
+            $eq: selectedDay,
+            // {
+            //   $toDate: selectedDay,
+            // },
+          },
+        };
+        Logger.instance.info(JSON.stringify(queryObj, null, 4));
+
+        const cursor = collection.find(queryObj);
+        if (!cursor) {
+          Logger.instance.error('no cursor');
+          resolve([]);
+          return;
+        }
+        cursor.toArray().then((resolvedData: any[]) => {
+          // DEBUGGING:
+          Logger.instance.info('found number of items:'+ resolvedData.length);
+          Logger.instance.info(JSON.stringify(resolvedData, null, 4));
+
+          resolve(resolvedData);
+        }).catch((ex: any) => {
+          Logger.instance.error('toArray failed:' + ex);
+          resolve([]);
+        });
+      });
+
+      this.connection.catch((connectionErr: any) => {
+        Logger.instance.error('error when connecting to db');
+        Logger.instance.error(connectionErr);
+        resolve(connectionErr);
+      });
+    });
+  }
   private mongoClient: MongoClient | null = null;
   private databaseName: string | null = null;
   private url: string | null = null;
@@ -46,7 +104,7 @@ export class MonogDbOperations {
         const updateQuery: any = {};
         updateQuery.$set = {};
         for (const key in updatedDocumentEntry) {
-          if (key === '_id')  {
+          if (key === '_id') {
             continue;
           }
           if (Object.prototype.hasOwnProperty.call(updatedDocumentEntry, key)) {
@@ -76,7 +134,7 @@ export class MonogDbOperations {
         // // }, null, 4));
 
         // collection.updateOne(queryObj, updateObj, (err: any, result: any) => {
-        
+
         // });
       });
       this.connection.catch((connectionErr: any) => {

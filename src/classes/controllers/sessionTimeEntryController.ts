@@ -4,7 +4,7 @@ import { ISessionTimeEntryDocument } from './../../../../common/typescript/mongo
 
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
-import { /*DateTime,*/ Duration, DurationObject } from 'luxon';
+import { DateTime, Duration, DurationObject } from 'luxon';
 import { Logger } from '../../logger';
 // import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
@@ -64,6 +64,56 @@ export default {
         Logger.instance.error(err);
         resolve('');
       });
+    });
+  },
+  getTimeStrFromSessionTimeEntry(docs: ISessionTimeEntryDocument[]) {
+    const durationSum = new DateTime();
+    for (const oneDocFromToday of docs) {
+      const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
+      let oneDuration;
+      if (!oneDurationInMilliseconds) {
+        oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
+      } else {
+        oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+      }
+      durationSum.plus(oneDuration);
+    }
+    const calculatedMilliseconds = durationSum.toMillis();
+
+    // DEBUGGING:
+    Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
+
+    const resultDuration = Duration.fromMillis(calculatedMilliseconds);
+    const resultStr = resultDuration.toFormat('hh:mm:ss');
+
+    // DEBUGGING:
+    Logger.instance.info('calculated working time duration:' + resultStr);
+
+    return resultStr;
+  },
+  getWorkingTimeByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
+    return new Promise((resolve: (value: string) => void) => {
+      try {
+        const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay);
+        if (!docsPromise) {
+          Logger.instance.error('no docs promise');
+          return;
+        }
+        docsPromise.then((docs: ISessionTimeEntryDocument[]) => {
+          if (!docs ||
+            !docs.length) {
+            resolve('');
+            return;
+          }
+          Logger.instance.info('found docs number of items:' + docs.length);
+          const timeStr = this.getTimeStrFromSessionTimeEntry(docs);
+          resolve(timeStr);
+        });
+      } catch (exception: any) {
+        Logger.instance.error('getWorkingTime failed:');
+        Logger.instance.error(exception);
+        resolve('');
+      }
     });
   },
   // getWorkingTimeDurationStr(mongoDbOperations: MonogDbOperations) {

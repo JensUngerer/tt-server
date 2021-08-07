@@ -23,6 +23,9 @@ import { Logger } from './logger';
 import { v4 } from 'uuid';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
 import appController from './classes/controllers/appController';
+import { Constants } from '../../common/typescript/constants';
+import sessionTimeEntryController from './classes/controllers/sessionTimeEntryController';
+import { DurationCalculator } from '../../common/typescript/helpers/durationCalculator';
 
 export interface IApp {
   configure(): void;
@@ -140,6 +143,18 @@ export class App implements IApp {
   public setupDatabaseConnection() {
     App.mongoDbOperations = new MonogDbOperations();
     App.mongoDbOperations.prepareConnection();
+    setTimeout(()=> {
+      const currentDay = DurationCalculator.getDayFrom(new Date());
+      Logger.instance.info('getting working time for:' + currentDay);
+
+      const workingTimePromise = sessionTimeEntryController.getWorkingTimeByDay(App.mongoDbOperations, currentDay);
+      workingTimePromise.then((workingTime: string) => {
+        Logger.instance.info(workingTime);
+      });
+      workingTimePromise.catch((error: any) => {
+        Logger.instance.error(error);
+      });
+    }, 0.5 * Constants.MILLISECONDS_IN_MINUTE);
   }
 
   public closeDataBaseConnection(): Promise<void> {
