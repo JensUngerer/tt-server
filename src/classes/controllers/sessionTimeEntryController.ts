@@ -76,8 +76,11 @@ export default {
       Logger.instance.info(JSON.stringify(docs, null, 4));
 
       const durationSum = new DateTime();
-      for (const oneDocFromToday of docs) {
-        // DEBUGGING:
+
+      Logger.instance.info('dateTime crated');
+
+      for (let index = 0; index < docs.length; index++) {
+        const oneDocFromToday = docs[index];
         Logger.instance.info(JSON.stringify(oneDocFromToday, null, 4));
 
         const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
@@ -96,6 +99,11 @@ export default {
         durationSum.plus(oneDuration);
         Logger.instance.info(durationSum.toString());
       }
+
+      // for (const oneDocFromToday of docs) {
+      //   // DEBUGGING:
+
+      // }
       const calculatedMilliseconds = durationSum.toMillis();
 
       // DEBUGGING:
