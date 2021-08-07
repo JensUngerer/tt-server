@@ -75,7 +75,7 @@ export default {
     try {
       Logger.instance.info(JSON.stringify(docs, null, 4));
 
-      const durationSum = new DateTime();
+      let durationSum = DateTime.fromObject({year: 0, month: 0, day: 0, hour: 0, minute: 0, millisecond: 0});
 
       Logger.instance.info('dateTime crated');
 
@@ -96,7 +96,7 @@ export default {
           Logger.instance.info(JSON.stringify(oneDuration));
           Logger.instance.info(oneDuration.toString());
         }
-        durationSum.plus(oneDuration);
+        durationSum = durationSum.plus(oneDuration);
         Logger.instance.info(durationSum.toString());
       }
 
