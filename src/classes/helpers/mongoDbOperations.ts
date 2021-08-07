@@ -9,13 +9,17 @@ export class MonogDbOperations {
       if (this.connection === null) {
         return;
       }
-      this.connection.then((theMongoClient: MongoClient) => {
-        if (!theMongoClient) {
-          Logger.instance.error('no mongodb client');
+      this.connection.then((theMongoClient: any) => {
+        if (this.mongoClient === null) {
+          Logger.instance.error('no mongo client');
           resolve([]);
           return;
         }
-        const db = theMongoClient.db(this.databaseName || undefined);
+        // DEBUGGING:
+        // Logger.instance.error('connectionSuccess');
+        // Logger.instance.error(connectionSuccess);
+
+        const db = this.mongoClient.db(this.databaseName as string);
         if (!db) {
           Logger.instance.error('no db found for:' + this.databaseName);
           resolve([]);
@@ -27,7 +31,8 @@ export class MonogDbOperations {
           resolve([]);
           return;
         }
-        const queryObj: FilterQuery<any> = {
+        //queryObj ? queryObj : {};
+        const FilterQuery = {
           day: {
             $eq: selectedDay,
             // {
@@ -35,22 +40,28 @@ export class MonogDbOperations {
             // },
           },
         };
-        Logger.instance.info(JSON.stringify(queryObj, null, 4));
+        Logger.instance.info(JSON.stringify(FilterQuery, null, 4));
 
-        const cursor = collection.find(queryObj);
+        // DEBUGGING:
+        // Logger.instance.error(JSON.stringify({
+        //     collectionName,
+        //     retrievedFilterQuery
+        // }, null, 4));
+
+        const cursor: Cursor<any> = collection.find(FilterQuery);
         if (!cursor) {
-          Logger.instance.error('no cursor');
+          Logger.instance.error('!cursor');
           resolve([]);
+          // this.mongoClient.close();
           return;
         }
+
         cursor.toArray().then((resolvedData: any[]) => {
           // DEBUGGING:
-          Logger.instance.info('found number of items:'+ resolvedData.length);
-          Logger.instance.info(JSON.stringify(resolvedData, null, 4));
+          // Logger.instance.error(JSON.stringify(resolvedData, null, 4));
 
           resolve(resolvedData);
-        }).catch((ex: any) => {
-          Logger.instance.error('toArray failed:' + ex);
+        }).catch(() => {
           resolve([]);
         });
       });
@@ -60,6 +71,60 @@ export class MonogDbOperations {
         Logger.instance.error(connectionErr);
         resolve(connectionErr);
       });
+      // if (this.connection === null) {
+      //   return;
+      // }
+      // this.connection.then((theMongoClient: MongoClient) => {
+      //   if (!theMongoClient) {
+      //     Logger.instance.error('no mongodb client');
+      //     resolve([]);
+      //     return;
+      //   }
+      //   const db = theMongoClient.db(this.databaseName || undefined);
+      //   if (!db) {
+      //     Logger.instance.error('no db found for:' + this.databaseName);
+      //     resolve([]);
+      //     return;
+      //   }
+      //   const collection = db.collection(collectionName);
+      //   if (!collection) {
+      //     Logger.instance.error('no collection found for:' + collectionName);
+      //     resolve([]);
+      //     return;
+      //   }
+      //   const queryObj: FilterQuery<any> = {
+      //     day: {
+      //       $eq: selectedDay,
+      //       // {
+      //       //   $toDate: selectedDay,
+      //       // },
+      //     },
+      //   };
+      //   Logger.instance.info(JSON.stringify(queryObj, null, 4));
+
+      //   const cursor = collection.find(queryObj);
+      //   if (!cursor) {
+      //     Logger.instance.error('no cursor');
+      //     resolve([]);
+      //     return;
+      //   }
+      //   cursor.toArray().then((resolvedData: any[]) => {
+      //     // DEBUGGING:
+      //     Logger.instance.info('found number of items:'+ resolvedData.length);
+      //     Logger.instance.info(JSON.stringify(resolvedData, null, 4));
+
+      //     resolve(resolvedData);
+      //   }).catch((ex: any) => {
+      //     Logger.instance.error('toArray failed:' + ex);
+      //     resolve([]);
+      //   });
+      // });
+
+      // this.connection.catch((connectionErr: any) => {
+      //   Logger.instance.error('error when connecting to db');
+      //   Logger.instance.error(connectionErr);
+      //   resolve(connectionErr);
+      // });
     });
   }
   private mongoClient: MongoClient | null = null;
