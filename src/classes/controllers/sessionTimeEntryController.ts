@@ -73,6 +73,8 @@ export default {
   },
   getTimeStrFromSessionTimeEntry(docs: ISessionTimeEntryDocument[]) {
     try {
+      Logger.instance.info(JSON.stringify(docs, null, 4));
+
       const durationSum = new DateTime();
       for (const oneDocFromToday of docs) {
         // DEBUGGING:
