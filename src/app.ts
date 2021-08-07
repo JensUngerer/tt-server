@@ -143,18 +143,20 @@ export class App implements IApp {
   public setupDatabaseConnection() {
     App.mongoDbOperations = new MonogDbOperations();
     App.mongoDbOperations.prepareConnection();
-    setTimeout(()=> {
-      const currentDay = DurationCalculator.getDayFrom(new Date());
-      Logger.instance.info('getting working time for:' + currentDay);
 
-      const workingTimePromise = sessionTimeEntryController.getWorkingTimeByDay(App.mongoDbOperations, currentDay);
-      workingTimePromise.then((workingTime: string) => {
-        Logger.instance.info(workingTime);
-      });
-      workingTimePromise.catch((error: any) => {
-        Logger.instance.error(error);
-      });
-    }, 0.5 * Constants.MILLISECONDS_IN_MINUTE);
+    // DEBUGGING purposes...
+    // setTimeout(()=> {
+    //   const currentDay = DurationCalculator.getDayFrom(new Date());
+    //   Logger.instance.info('getting working time for:' + currentDay);
+
+    //   const workingTimePromise = sessionTimeEntryController.getWorkingTimeByDay(App.mongoDbOperations, currentDay);
+    //   workingTimePromise.then((workingTime: string) => {
+    //     Logger.instance.info(workingTime);
+    //   });
+    //   workingTimePromise.catch((error: any) => {
+    //     Logger.instance.error(error);
+    //   });
+    // }, 0.5 * Constants.MILLISECONDS_IN_MINUTE);
   }
 
   public closeDataBaseConnection(): Promise<void> {

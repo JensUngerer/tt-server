@@ -80,46 +80,40 @@ export default {
       durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
       // DateTime.fromObject({years: 0, months: 0, days: 0, hour: 0, minutes: 0, milliseconds: 0});
 
-      Logger.instance.info('dateTime crated');
+      // Logger.instance.info('dateTime crated');
 
       for (let index = 0; index < docs.length; index++) {
         const oneDocFromToday = docs[index];
-        Logger.instance.info(JSON.stringify(oneDocFromToday, null, 4));
+        // Logger.instance.info(JSON.stringify(oneDocFromToday, null, 4));
 
         const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
         let oneDuration;
         if (!oneDurationInMilliseconds) {
           oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
         } else {
-          Logger.instance.info('stored duration in milliseconds:');
-          Logger.instance.info(JSON.stringify(oneDurationInMilliseconds, null, 4));
+          // Logger.instance.info('stored duration in milliseconds:');
+          // Logger.instance.info(JSON.stringify(oneDurationInMilliseconds, null, 4));
 
           oneDuration = Duration.fromObject(oneDurationInMilliseconds);
           oneDuration = oneDuration.shiftTo(...Constants.shiftToParameter);
 
-          Logger.instance.info(JSON.stringify(oneDuration.toObject(), null, 4));
-          // Logger.instance.info(JSON.stringify(oneDuration));
-          // Logger.instance.info(oneDuration.toString());
+          // Logger.instance.info(JSON.stringify(oneDuration.toObject(), null, 4));
         }
         durationSum = durationSum.plus(oneDuration);
         durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
-        Logger.instance.info(durationSum.toString());
+        // Logger.instance.info(durationSum.toString());
       }
 
-      // for (const oneDocFromToday of docs) {
-      //   // DEBUGGING:
-
-      // }
       const calculatedMilliseconds = durationSum.toMillis();
 
       // DEBUGGING:
-      Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
+      // Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
 
       const resultDuration = Duration.fromMillis(calculatedMilliseconds);
       const resultStr = resultDuration.toFormat('hh:mm:ss');
 
       // DEBUGGING:
-      Logger.instance.info('calculated working time duration:' + resultStr);
+      // Logger.instance.info('calculated working time duration:' + resultStr);
 
       return resultStr;
     } catch (exception: any) {
@@ -142,7 +136,7 @@ export default {
             resolve('');
             return;
           }
-          Logger.instance.info('found docs number of items:' + docs.length);
+          // Logger.instance.info('found docs number of items:' + docs.length);
           const timeStr = this.getTimeStrFromSessionTimeEntry(docs);
           resolve(timeStr);
         });
