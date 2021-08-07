@@ -75,14 +75,24 @@ export default {
     try {
       const durationSum = new DateTime();
       for (const oneDocFromToday of docs) {
+        // DEBUGGING:
+        Logger.instance.info(JSON.stringify(oneDocFromToday, null, 4));
+
         const oneDurationInMilliseconds = oneDocFromToday.durationInMilliseconds as DurationObject;
         let oneDuration;
         if (!oneDurationInMilliseconds) {
           oneDuration = this.getDurationFromRunningSessionTimeEntry(oneDocFromToday);
         } else {
+          Logger.instance.info('stored duration in milliseconds:');
+          Logger.instance.info(JSON.stringify(oneDurationInMilliseconds, null, 4));
+
           oneDuration = Duration.fromObject(oneDurationInMilliseconds);
+
+          Logger.instance.info(JSON.stringify(oneDuration));
+          Logger.instance.info(oneDuration.toString());
         }
         durationSum.plus(oneDuration);
+        Logger.instance.info(durationSum.toString());
       }
       const calculatedMilliseconds = durationSum.toMillis();
 
