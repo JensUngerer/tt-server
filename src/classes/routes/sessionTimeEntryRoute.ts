@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import App from '../../app';
@@ -29,8 +30,9 @@ const getWorkingTime = async (req: Request, res: Response) => {
   try {
     const today = new Date();
     const todayInUtc = DurationCalculator.getDayFrom(today);
-    const response = await sessionTimeEntryController.getWorkingTimeByDay(App.mongoDbOperations, todayInUtc);
-    const serializedResponse = Serialization.serialize(response);
+    const durationResponse = await sessionTimeEntryController.getWorkingTimeByDay(App.mongoDbOperations, todayInUtc);
+    const durationStr = durationResponse.toFormat(Constants.contextDurationFormat);
+    const serializedResponse = Serialization.serialize(durationStr);
     res.send(serializedResponse);
   } catch (exception) {
     Logger.instance.error(exception);
