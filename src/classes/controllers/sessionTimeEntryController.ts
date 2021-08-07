@@ -76,11 +76,8 @@ export default {
     try {
       Logger.instance.info(JSON.stringify(docs, null, 4));
 
-      let durationSum = Duration.fromObject({years: 0, months: 0, days: 0, hour: 0, minutes: 0, milliseconds: 0});
+      let durationSum = Duration.fromObject(Constants.durationInitializationZero);
       durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
-      // DateTime.fromObject({years: 0, months: 0, days: 0, hour: 0, minutes: 0, milliseconds: 0});
-
-      // Logger.instance.info('dateTime crated');
 
       for (let index = 0; index < docs.length; index++) {
         const oneDocFromToday = docs[index];
@@ -104,13 +101,13 @@ export default {
         // Logger.instance.info(durationSum.toString());
       }
 
-      const calculatedMilliseconds = durationSum.toMillis();
+      // const calculatedMilliseconds = durationSum.toMillis();
 
       // DEBUGGING:
       // Logger.instance.info('caluclated working time millis:' + calculatedMilliseconds);
 
-      const resultDuration = Duration.fromMillis(calculatedMilliseconds);
-      const resultStr = resultDuration.toFormat('hh:mm:ss');
+      // const resultDuration = Duration.fromMillis(calculatedMilliseconds);
+      const resultStr = durationSum.toFormat('hh:mm:ss');
 
       // DEBUGGING:
       // Logger.instance.info('calculated working time duration:' + resultStr);
