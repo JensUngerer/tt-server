@@ -4,14 +4,38 @@ import { ISessionTimeEntryDocument } from './../../../../common/typescript/mongo
 
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
-import { Duration, DurationObject } from 'luxon';
+import { DateTime, Duration, DurationObject } from 'luxon';
 import { Logger } from '../../logger';
 import { Constants } from '../../../../common/typescript/constants';
+import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
-  getWorkingTimeByWeek(mongoDbOperations: MonogDbOperations, currentWorkingWeek: Date[]) {
+  getWorkingDaysOfCurrentWeek() {
+    // cf.: https://stackoverflow.com/questions/50350110/how-to-create-momentlocaledata-firstdayofweek-in-luxon
+    const today = new Date();
+    const todayInUtc = DurationCalculator.getDayFrom(today);
+
+    const lastMonday = DateTime.local().startOf('week');
+    const lastMondayJSDate = lastMonday.toJSDate();
+    const lastMondayInUtc = DurationCalculator.getDayFrom(lastMondayJSDate);
+
+    const currentWorkingWeek = [lastMondayInUtc];
+    let currentDay = lastMondayInUtc;
+    for (let index = 0; index < 5; index++) {
+      // https://stackoverflow.com/questions/492994/compare-two-dates-with-javascript
+      if (currentDay.getTime() === todayInUtc.getTime()) {
+        break;
+      }
+      currentDay = DurationCalculator.getNextDayFrom(currentDay);
+      currentWorkingWeek.push(currentDay);
+    }
+    return currentWorkingWeek;
+  },
+  getWorkingTimeByWeek(mongoDbOperations: MonogDbOperations) {
     let durationSum = Duration.fromObject(Constants.durationInitializationZero);
     durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
+
+    const currentWorkingWeek = this.getWorkingDaysOfCurrentWeek();
     if (!currentWorkingWeek ||
       !currentWorkingWeek.length) {
       return durationSum;

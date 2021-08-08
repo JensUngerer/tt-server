@@ -23,6 +23,8 @@ import { Logger } from './logger';
 import { v4 } from 'uuid';
 import sessionTimeEntryRoute from './classes/routes/sessionTimeEntryRoute';
 import appController from './classes/controllers/appController';
+import sessionTimeEntryController from './classes/controllers/sessionTimeEntryController';
+import { Constants } from '../../common/typescript/constants';
 
 export interface IApp {
   configure(): void;
@@ -140,6 +142,12 @@ export class App implements IApp {
   public setupDatabaseConnection() {
     App.mongoDbOperations = new MonogDbOperations();
     App.mongoDbOperations.prepareConnection();
+
+    setTimeout(() => {
+      const weeklyWorkingDuration = sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
+      const weeklyWorkingTimeStr = weeklyWorkingDuration.toFormat(Constants.contextDurationFormat);
+      Logger.instance.info(weeklyWorkingTimeStr);
+    }, 30 * Constants.MILLISECONDS_IN_SECOND);
   }
 
   public closeDataBaseConnection(): Promise<void> {
