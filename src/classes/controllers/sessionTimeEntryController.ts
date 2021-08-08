@@ -21,7 +21,8 @@ export default {
 
     const currentWorkingWeek = [lastMondayInUtc];
     let currentDay = lastMondayInUtc;
-    for (let index = 0; index < 5; index++) {
+    const NUMBER_OF_DAYS_IN_WEEK_MINUS_FIRST_ONE = 6;
+    for (let index = 0; index < NUMBER_OF_DAYS_IN_WEEK_MINUS_FIRST_ONE; index++) {
       // https://stackoverflow.com/questions/492994/compare-two-dates-with-javascript
       if (currentDay.getTime() === todayInUtc.getTime()) {
         break;

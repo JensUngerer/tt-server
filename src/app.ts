@@ -143,17 +143,18 @@ export class App implements IApp {
     App.mongoDbOperations = new MonogDbOperations();
     App.mongoDbOperations.prepareConnection();
 
-    setTimeout(() => {
-      const weeklyWorkingDurationPromise = sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
-      weeklyWorkingDurationPromise.then((weeklyWorkingDuration) => {
-        if (!weeklyWorkingDuration) {
-          Logger.instance.error('no weeklyWorkingDuration');
-          return;
-        }
-        const weeklyWorkingTimeStr = weeklyWorkingDuration.toFormat(Constants.contextDurationFormat);
-        Logger.instance.info(weeklyWorkingTimeStr);
-      });
-    }, 30 * Constants.MILLISECONDS_IN_SECOND);
+    // DEBUGGING:
+    // setTimeout(() => {
+    //   const weeklyWorkingDurationPromise = sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
+    //   weeklyWorkingDurationPromise.then((weeklyWorkingDuration) => {
+    //     if (!weeklyWorkingDuration) {
+    //       Logger.instance.error('no weeklyWorkingDuration');
+    //       return;
+    //     }
+    //     const weeklyWorkingTimeStr = weeklyWorkingDuration.toFormat(Constants.contextDurationFormat);
+    //     Logger.instance.info(weeklyWorkingTimeStr);
+    //   });
+    // }, 30 * Constants.MILLISECONDS_IN_SECOND);
   }
 
   public closeDataBaseConnection(): Promise<void> {
