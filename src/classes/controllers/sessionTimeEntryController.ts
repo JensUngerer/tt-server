@@ -9,6 +9,39 @@ import { Logger } from '../../logger';
 import { Constants } from '../../../../common/typescript/constants';
 
 export default {
+  getWorkingTimeByWeek(mongoDbOperations: MonogDbOperations, currentWorkingWeek: Date[]) {
+    let durationSum = Duration.fromObject(Constants.durationInitializationZero);
+    durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
+    if (!currentWorkingWeek ||
+      !currentWorkingWeek.length) {
+      return durationSum;
+    }
+
+    let loopIndex = 0;
+    const loop = () => {
+      if (loopIndex >= currentWorkingWeek.length) {
+        return;
+      }
+      const oneDay = currentWorkingWeek[loopIndex];
+      const oneDayDurationPromise = this.getWorkingTimeByDay(mongoDbOperations, oneDay);
+      oneDayDurationPromise.then((oneDayDuration) => {
+        durationSum = durationSum.plus(oneDayDuration);
+
+        loopIndex++;
+        loop();
+      });
+      oneDayDurationPromise.catch((err) => {
+        Logger.instance.error(err);
+
+        loopIndex++;
+        loop();
+      });
+    };
+    //initial call
+    loop();
+
+    return durationSum;
+  },
   getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ISessionTimeEntryDocument) {
     try {
       const endTime = new Date();
