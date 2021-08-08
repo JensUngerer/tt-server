@@ -43,6 +43,10 @@ const getWorkingTime = async (req: Request, res: Response) => {
 
 const getWeeklyWorkingTime = async (req: Request, res: Response) => {
   const durationResponse = await sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
+  if (!durationResponse) {
+    res.send('');
+    return;
+  }
   const durationStr = durationResponse.toFormat(Constants.contextDurationFormat);
   const serializedResponse = Serialization.serialize(durationStr);
   res.send(serializedResponse);
