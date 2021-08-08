@@ -35,36 +35,38 @@ export default {
     let durationSum = Duration.fromObject(Constants.durationInitializationZero);
     durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
 
-    const currentWorkingWeek = this.getWorkingDaysOfCurrentWeek();
-    if (!currentWorkingWeek ||
-      !currentWorkingWeek.length) {
-      return durationSum;
-    }
-
-    let loopIndex = 0;
-    const loop = () => {
-      if (loopIndex >= currentWorkingWeek.length) {
+    return new Promise((resolve: (value?:Duration) => void) => {
+      const currentWorkingWeek = this.getWorkingDaysOfCurrentWeek();
+      if (!currentWorkingWeek ||
+        !currentWorkingWeek.length) {
+        resolve(durationSum);
         return;
       }
-      const oneDay = currentWorkingWeek[loopIndex];
-      const oneDayDurationPromise = this.getWorkingTimeByDay(mongoDbOperations, oneDay);
-      oneDayDurationPromise.then((oneDayDuration) => {
-        durationSum = durationSum.plus(oneDayDuration);
 
-        loopIndex++;
-        loop();
-      });
-      oneDayDurationPromise.catch((err) => {
-        Logger.instance.error(err);
+      let loopIndex = 0;
+      const loop = () => {
+        if (loopIndex >= currentWorkingWeek.length) {
+          resolve(durationSum);
+          return;
+        }
+        const oneDay = currentWorkingWeek[loopIndex];
+        const oneDayDurationPromise = this.getWorkingTimeByDay(mongoDbOperations, oneDay);
+        oneDayDurationPromise.then((oneDayDuration) => {
+          durationSum = durationSum.plus(oneDayDuration);
 
-        loopIndex++;
-        loop();
-      });
-    };
-    //initial call
-    loop();
+          loopIndex++;
+          loop();
+        });
+        oneDayDurationPromise.catch((err) => {
+          Logger.instance.error(err);
 
-    return durationSum;
+          loopIndex++;
+          loop();
+        });
+      };
+      //initial call
+      loop();
+    });
   },
   getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ISessionTimeEntryDocument) {
     try {
@@ -132,7 +134,7 @@ export default {
   },
   getTimeStrFromSessionTimeEntry(docs: ISessionTimeEntryDocument[]) {
     try {
-      Logger.instance.info(JSON.stringify(docs, null, 4));
+      // Logger.instance.info(JSON.stringify(docs, null, 4));
 
       let durationSum = Duration.fromObject(Constants.durationInitializationZero);
       durationSum = durationSum.shiftTo(...Constants.shiftToParameter);

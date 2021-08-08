@@ -144,9 +144,15 @@ export class App implements IApp {
     App.mongoDbOperations.prepareConnection();
 
     setTimeout(() => {
-      const weeklyWorkingDuration = sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
-      const weeklyWorkingTimeStr = weeklyWorkingDuration.toFormat(Constants.contextDurationFormat);
-      Logger.instance.info(weeklyWorkingTimeStr);
+      const weeklyWorkingDurationPromise = sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
+      weeklyWorkingDurationPromise.then((weeklyWorkingDuration) => {
+        if (!weeklyWorkingDuration) {
+          Logger.instance.error('no weeklyWorkingDuration');
+          return;
+        }
+        const weeklyWorkingTimeStr = weeklyWorkingDuration.toFormat(Constants.contextDurationFormat);
+        Logger.instance.info(weeklyWorkingTimeStr);
+      });
     }, 30 * Constants.MILLISECONDS_IN_SECOND);
   }
 

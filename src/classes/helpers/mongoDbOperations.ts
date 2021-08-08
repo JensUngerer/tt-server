@@ -40,7 +40,7 @@ export class MonogDbOperations {
             // },
           },
         };
-        Logger.instance.info(JSON.stringify(FilterQuery, null, 4));
+        // Logger.instance.info(JSON.stringify(FilterQuery, null, 4));
 
         // DEBUGGING:
         // Logger.instance.error(JSON.stringify({
