@@ -10,6 +10,30 @@ import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
+  getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
+    return new Promise((resolve: (value: ISessionTimeEntryDocument[]) => void) => {
+      try {
+        const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay);
+        if (!docsPromise) {
+          Logger.instance.error('no docs promise');
+          resolve([]);
+          return;
+        }
+        docsPromise.then((docs: ISessionTimeEntryDocument[]) => {
+          if (!docs ||
+            !docs.length) {
+            resolve([]);
+            return;
+          }
+          resolve(docs);
+        });
+      } catch (exception: any) {
+        Logger.instance.error('getWorkingTime failed:');
+        Logger.instance.error(exception);
+        resolve([]);
+      }
+    });
+  },
   getWorkingDaysOfCurrentWeek() {
     // cf.: https://stackoverflow.com/questions/50350110/how-to-create-momentlocaledata-firstdayofweek-in-luxon
     const today = new Date();
@@ -36,7 +60,7 @@ export default {
     let durationSum = Duration.fromObject(Constants.durationInitializationZero);
     durationSum = durationSum.shiftTo(...Constants.shiftToParameter);
 
-    return new Promise((resolve: (value?:Duration) => void) => {
+    return new Promise((resolve: (value?: Duration) => void) => {
       const currentWorkingWeek = this.getWorkingDaysOfCurrentWeek();
       if (!currentWorkingWeek ||
         !currentWorkingWeek.length) {
@@ -187,26 +211,20 @@ export default {
     let zeroDuration = Duration.fromObject(Constants.durationInitializationZero);
     zeroDuration = zeroDuration.shiftTo(...Constants.shiftToParameter);
 
+    const workingTimeEntriesPromise = this.getWorkingTimeEntriesByDay(mongoDbOperations, selectedDay);
     return new Promise((resolve: (value: Duration) => void) => {
       try {
-        const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay);
-        if (!docsPromise) {
-          Logger.instance.error('no docs promise');
-          resolve(zeroDuration);
-          return;
-        }
-        docsPromise.then((docs: ISessionTimeEntryDocument[]) => {
-          if (!docs ||
-            !docs.length) {
-            resolve(zeroDuration);
-            return;
-          }
+        workingTimeEntriesPromise.then((docs: ISessionTimeEntryDocument[]) => {
           // Logger.instance.info('found docs number of items:' + docs.length);
           const duration = this.getTimeStrFromSessionTimeEntry(docs);
           resolve(duration);
         });
-      } catch (exception: any) {
-        Logger.instance.error('getWorkingTime failed:');
+        workingTimeEntriesPromise.catch((err: any) => {
+          Logger.instance.error(err);
+          resolve(zeroDuration);
+        });
+      }
+      catch (exception) {
         Logger.instance.error(exception);
         resolve(zeroDuration);
       }

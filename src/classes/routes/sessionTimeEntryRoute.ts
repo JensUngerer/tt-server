@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
+import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
 import App from '../../app';
 import { Logger } from '../../logger';
 import sessionTimeEntryController from '../controllers/sessionTimeEntryController';
@@ -24,6 +25,24 @@ const getSessionTimeEntry = async (req: Request, res: Response) => {
   // Logger.instance.info(stringifiedResponse);
 
   res.send(stringifiedResponse);
+};
+
+const getWorkingTimeEntries = async (req: Request, res: Response) => {
+  try {
+    const url = req.url;
+    const urlSplit = url.split('/');
+    const rawRequestedDayTimeStamp = urlSplit[urlSplit.length -1];
+    const rawRequestedDay = parseInt(rawRequestedDayTimeStamp);
+    const requestedDay = new Date(rawRequestedDay);
+
+    const timeEntryDocs: ISessionTimeEntry[] = await sessionTimeEntryController.getWorkingTimeEntriesByDay(App.mongoDbOperations, requestedDay);
+
+    const serializedResponse = Serialization.serialize(timeEntryDocs);
+    res.send(serializedResponse);
+  } catch (getWorkingTimeEntriesException) {
+    Logger.instance.error(getWorkingTimeEntriesException);
+    res.send('');
+  }
 };
 
 const getWorkingTime = async (req: Request, res: Response) => {
@@ -59,5 +78,8 @@ workingTimeRoute.get(getWorkingTime);
 
 const weeklyWorkingTimeRoute = router.route(routesConfig.weeklyWorkingTimeSuffix);
 weeklyWorkingTimeRoute.get(getWeeklyWorkingTime);
+
+const workingTimeEntriesRoute = router.route(routesConfig.workingTimeEntriesSuffix + '/*');
+workingTimeEntriesRoute.get(getWorkingTimeEntries);
 
 export default router;
