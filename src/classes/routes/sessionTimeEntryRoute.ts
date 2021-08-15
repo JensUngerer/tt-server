@@ -31,11 +31,16 @@ const getWorkingTimeEntries = async (req: Request, res: Response) => {
   try {
     const url = req.url;
     const urlSplit = url.split('/');
-    const rawRequestedDayTimeStamp = urlSplit[urlSplit.length -1];
+    const rawRequestedDayTimeStamp = urlSplit[urlSplit.length - 1];
     const rawRequestedDay = parseInt(rawRequestedDayTimeStamp);
     const requestedDay = new Date(rawRequestedDay);
-
-    const timeEntryDocs: ISessionTimeEntry[] = await sessionTimeEntryController.getWorkingTimeEntriesByDay(App.mongoDbOperations, requestedDay);
+    // only terminated (completed) time-entries (with endTime != null)
+    const additionalCriteria: { [key: string]: any } = {
+    };
+    additionalCriteria[routesConfig.endDateProperty] = {
+      $ne: null,
+    };
+    const timeEntryDocs: ISessionTimeEntry[] = await sessionTimeEntryController.getWorkingTimeEntriesByDay(App.mongoDbOperations, requestedDay, additionalCriteria);
 
     const serializedResponse = Serialization.serialize(timeEntryDocs);
     res.send(serializedResponse);

@@ -4,7 +4,7 @@ import * as routes from '../../../../common/typescript/routes.js';
 import { Logger } from './../../logger';
 
 export class MonogDbOperations {
-  filterByDay(collectionName: any, selectedDay: Date) {
+  filterByDay(collectionName: any, selectedDay: Date, additionalCriteria?: { [key: string]: any }) {
     return new Promise((resolve: (value?: any) => void) => {
       if (this.connection === null) {
         return;
@@ -31,15 +31,23 @@ export class MonogDbOperations {
           resolve([]);
           return;
         }
-        //queryObj ? queryObj : {};
-        const FilterQuery = {
+        const filterQuery: any = {
           day: {
             $eq: selectedDay,
-            // {
-            //   $toDate: selectedDay,
-            // },
           },
         };
+        if (additionalCriteria) {
+          const additionalCriteriaKeys = Object.keys(additionalCriteria);
+          if (additionalCriteriaKeys &&
+            additionalCriteriaKeys.length > 0) {
+            additionalCriteriaKeys.forEach((oneAdditionalProperty: string) => {
+              const additionalValue = additionalCriteria[oneAdditionalProperty];
+              if (additionalValue) {
+                filterQuery[oneAdditionalProperty] = additionalValue;
+              }
+            });
+          }
+        }
         // Logger.instance.info(JSON.stringify(FilterQuery, null, 4));
 
         // DEBUGGING:
@@ -48,7 +56,7 @@ export class MonogDbOperations {
         //     retrievedFilterQuery
         // }, null, 4));
 
-        const cursor: Cursor<any> = collection.find(FilterQuery);
+        const cursor: Cursor<any> = collection.find(filterQuery);
         if (!cursor) {
           Logger.instance.error('!cursor');
           resolve([]);

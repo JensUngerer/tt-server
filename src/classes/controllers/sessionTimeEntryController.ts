@@ -10,10 +10,10 @@ import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 
 export default {
-  getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
+  getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date,  additionalCriteria?: {[key: string]: any}) {
     return new Promise((resolve: (value: ISessionTimeEntryDocument[]) => void) => {
       try {
-        const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay);
+        const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay, additionalCriteria);
         if (!docsPromise) {
           Logger.instance.error('no docs promise');
           resolve([]);
@@ -211,7 +211,8 @@ export default {
     let zeroDuration = Duration.fromObject(Constants.durationInitializationZero);
     zeroDuration = zeroDuration.shiftTo(...Constants.shiftToParameter);
 
-    const workingTimeEntriesPromise = this.getWorkingTimeEntriesByDay(mongoDbOperations, selectedDay);
+    // undefined -> no additional criteria -> so "get everything", also non completed time entries
+    const workingTimeEntriesPromise = this.getWorkingTimeEntriesByDay(mongoDbOperations, selectedDay, undefined);
     return new Promise((resolve: (value: Duration) => void) => {
       try {
         workingTimeEntriesPromise.then((docs: ISessionTimeEntryDocument[]) => {
