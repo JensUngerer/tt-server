@@ -180,6 +180,9 @@ export class MonogDbOperations {
           if (key === '_id') {
             continue;
           }
+          if (key === idPropertyName) {
+            continue;
+          }
           if (Object.prototype.hasOwnProperty.call(updatedDocumentEntry, key)) {
             const element = updatedDocumentEntry[key];
             updateQuery.$set[key] = element;

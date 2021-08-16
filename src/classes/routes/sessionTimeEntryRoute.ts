@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+
 import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
@@ -6,7 +7,6 @@ import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEnt
 import App from '../../app';
 import { Logger } from '../../logger';
 import sessionTimeEntryController from '../controllers/sessionTimeEntryController';
-import { RequestProcessingHelpers } from '../helpers/requestProcessingHelpers';
 import { UrlHelpers } from '../helpers/urlHelpers';
 // @ts-ignore
 import routesConfig from './../../../../common/typescript/routes.js';
