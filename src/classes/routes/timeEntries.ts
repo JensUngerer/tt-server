@@ -128,9 +128,9 @@ const patchTimeEntriesStop = async (req: Request, res: Response) => {
 };
 
 /**
- * 
- * @param req 
- * @param res 
+ *
+ * @param req
+ * @param res
  */
 const postTryStopHandler = async (req: Request, res: Response) => {
   const body = Serialization.deSerialize<any>(req.body);
@@ -145,7 +145,7 @@ const postTryStopHandler = async (req: Request, res: Response) => {
   Logger.instance.info(JSON.stringify(body, null, 4));
 
   // check whether running:
-  let theQueryObj: any = {};
+  const theQueryObj: any = {};
   theQueryObj[routesConfig.endDateProperty] = null;
 
   // DEBUGGING:

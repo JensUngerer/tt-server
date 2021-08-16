@@ -8,8 +8,16 @@ import { DateTime, Duration, DurationObject } from 'luxon';
 import { Logger } from '../../logger';
 import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
+import { Request } from 'express';
+import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
+import { Serialization } from '../../../../common/typescript/helpers/serialization';
 
 export default {
+  patchWorkingTimeEntry(id: string, req: Request, mongoDbOperations: MonogDbOperations) {
+    const updatedSessionTimeEntryDocument = Serialization.deSerialize<ISessionTimeEntry>(req.body);
+
+    return mongoDbOperations.updateOne(routesConfig.timeEntryIdProperty, id, updatedSessionTimeEntryDocument, routesConfig.sessionTimEntriesCollectionName);
+  },
   getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date,  additionalCriteria?: {[key: string]: any}) {
     return new Promise((resolve: (value: ISessionTimeEntryDocument[]) => void) => {
       try {

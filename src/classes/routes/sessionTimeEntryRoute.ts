@@ -6,6 +6,8 @@ import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEnt
 import App from '../../app';
 import { Logger } from '../../logger';
 import sessionTimeEntryController from '../controllers/sessionTimeEntryController';
+import { RequestProcessingHelpers } from '../helpers/requestProcessingHelpers';
+import { UrlHelpers } from '../helpers/urlHelpers';
 // @ts-ignore
 import routesConfig from './../../../../common/typescript/routes.js';
 
@@ -50,6 +52,19 @@ const getWorkingTimeEntries = async (req: Request, res: Response) => {
   }
 };
 
+const patchWorkingTimeEntry = async (req: Request, res: Response) => {
+  try {
+    const url = req.url;
+    const id = UrlHelpers.getIdFromUlr(url);
+    const response = await sessionTimeEntryController.patchWorkingTimeEntry(id, req, App.mongoDbOperations);
+    const stringifiedResponse = Serialization.serialize(response);
+    res.send(stringifiedResponse);
+  } catch (exc) {
+    Logger.instance.error(exc);
+    res.send('');
+  }
+};
+
 const getWorkingTime = async (req: Request, res: Response) => {
   try {
     const today = new Date();
@@ -87,4 +102,6 @@ weeklyWorkingTimeRoute.get(getWeeklyWorkingTime);
 const workingTimeEntriesRoute = router.route(routesConfig.workingTimeEntriesSuffix + '/*');
 workingTimeEntriesRoute.get(getWorkingTimeEntries);
 
+const workingTimeEntryPatchRoute = router.route(routesConfig.workingTimeEntriesSuffix + '/*');
+workingTimeEntryPatchRoute.patch(patchWorkingTimeEntry);
 export default router;
