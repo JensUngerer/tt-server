@@ -2,16 +2,16 @@ import { FilterQuery } from 'mongodb';
 import { MonogDbOperations } from '../helpers/mongoDbOperations';
 // @ts-ignore
 import routes from '../../../../common/typescript/routes.js';
-import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
 import { Constants } from '../../../../common/typescript/constants';
 import { Duration } from 'luxon';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Logger } from '../../logger';
+import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
 
 export default {
   createSessionTimeEntryAtStart(mongoDbOperations: MonogDbOperations, sessionIdAsTimeEntryId: string) {
     const startTime = new Date();
-    const sessionTimeEntry: ISessionTimeEntry = {
+    const sessionTimeEntry: ITimeEntryBase = {
       startTime,
       timeEntryId: sessionIdAsTimeEntryId,
       day: DurationCalculator.getDayFrom(startTime),
@@ -25,7 +25,7 @@ export default {
         timeEntryId: sessionIdAsTimeEntryId,
       };
       const sessionTimeEntryPromise = mongoDbOperations.getFiltered(routes.sessionTimEntriesCollectionName, filterQuery);
-      sessionTimeEntryPromise.then((docs: ISessionTimeEntry[]) => {
+      sessionTimeEntryPromise.then((docs: ITimeEntryBase[]) => {
         if (!docs || !docs.length) {
           resolve(false);
           return;

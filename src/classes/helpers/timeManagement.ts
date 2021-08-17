@@ -1,6 +1,7 @@
 import { ITimeEntryDocument } from './../../../../common/typescript/mongoDB/iTimeEntryDocument';
 import { DateTime, Duration } from 'luxon';
 import { Logger } from './../../logger';
+import { Constants } from '../../../../common/typescript/constants';
 
 export class TimeManagement {
   public static timeEntryToDuration(timeEntry: ITimeEntryDocument) {
@@ -22,8 +23,12 @@ export class TimeManagement {
       Logger.instance.error('cannot calculate duration for:' + JSON.stringify(timeEntry, null, 4));
       return Duration.fromMillis(0);
     }
-
-    const trackedDurationInMilliseconds = TimeManagement.getTimeDifferenceInMilliseconds(timeEntry.endTime, timeEntry.startTime);
+    const theEndTime = timeEntry.endTime;
+    if (typeof theEndTime === 'undefined') {
+      Logger.instance.error('no endTime:' + JSON.stringify(timeEntry, null, 4));
+      return Duration.fromObject(Constants.durationInitializationZero);
+    }
+    const trackedDurationInMilliseconds = TimeManagement.getTimeDifferenceInMilliseconds(theEndTime, timeEntry.startTime);
     return trackedDurationInMilliseconds;
   }
 }

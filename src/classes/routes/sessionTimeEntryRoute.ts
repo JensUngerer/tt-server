@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
-import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
+import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
 import App from '../../app';
 import { Logger } from '../../logger';
 import sessionTimeEntryController from '../controllers/sessionTimeEntryController';
@@ -42,7 +42,7 @@ const getWorkingTimeEntries = async (req: Request, res: Response) => {
     additionalCriteria[routesConfig.endDateProperty] = {
       $ne: null,
     };
-    const timeEntryDocs: ISessionTimeEntry[] = await sessionTimeEntryController.getWorkingTimeEntriesByDay(App.mongoDbOperations, requestedDay, additionalCriteria);
+    const timeEntryDocs: ITimeEntryBase[] = await sessionTimeEntryController.getWorkingTimeEntriesByDay(App.mongoDbOperations, requestedDay, additionalCriteria);
 
     const serializedResponse = Serialization.serialize(timeEntryDocs);
     res.send(serializedResponse);

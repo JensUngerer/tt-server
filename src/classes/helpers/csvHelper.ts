@@ -45,8 +45,13 @@ export class CsvHelper {
         Logger.instance.error('no corresponding task for:' + JSON.stringify(oneTimeEntryDoc, null, 4));
         continue;
       }
+      const theMillis = oneTimeEntryDoc.durationInMilliseconds;
+      if (typeof theMillis === 'undefined') {
+        Logger.instance.error('no theMillis:' + JSON.stringify(oneTimeEntryDoc, null, 4));
+        continue;
+      }
 
-      const duration = Duration.fromObject(oneTimeEntryDoc.durationInMilliseconds);
+      const duration = Duration.fromObject(theMillis);
       const durationText = duration.toFormat(Constants.contextDurationFormat);
       const durationSuffix = duration.milliseconds.toString();
       const day = DateTime.fromJSDate(oneTimeEntryDoc.startTime).toFormat(Constants.contextIsoFormat);

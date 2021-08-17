@@ -9,17 +9,17 @@ import { Logger } from '../../logger';
 import { Constants } from '../../../../common/typescript/constants';
 import { DurationCalculator } from '../../../../common/typescript/helpers/durationCalculator';
 import { Request } from 'express';
-import { ISessionTimeEntry } from '../../../../common/typescript/iSessionTimeEntry';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
+import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
 
 export default {
   patchWorkingTimeEntry(id: string, req: Request, mongoDbOperations: MonogDbOperations) {
-    const updatedSessionTimeEntryDocument = Serialization.deSerialize<ISessionTimeEntry>(req.body);
+    const updatedSessionTimeEntryDocument = Serialization.deSerialize<ITimeEntryBase>(req.body);
 
     return mongoDbOperations.updateOne(routesConfig.timeEntryIdProperty, id, updatedSessionTimeEntryDocument, routesConfig.sessionTimEntriesCollectionName);
   },
   getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date,  additionalCriteria?: {[key: string]: any}) {
-    return new Promise((resolve: (value: ISessionTimeEntryDocument[]) => void) => {
+    return new Promise((resolve: (value: ITimeEntryBase[]) => void) => {
       try {
         const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay, additionalCriteria);
         if (!docsPromise) {
@@ -27,7 +27,7 @@ export default {
           resolve([]);
           return;
         }
-        docsPromise.then((docs: ISessionTimeEntryDocument[]) => {
+        docsPromise.then((docs: ITimeEntryBase[]) => {
           if (!docs ||
             !docs.length) {
             resolve([]);
@@ -101,7 +101,7 @@ export default {
       loop();
     });
   },
-  getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ISessionTimeEntryDocument) {
+  getDurationFromRunningSessionTimeEntry(sessionTimeEntry: ITimeEntryBase) {
     try {
       const endTime = new Date();
       const startTime = sessionTimeEntry.startTime;
@@ -121,7 +121,7 @@ export default {
     const timeEntriesPromise = mongoDbOperations.getFiltered(routesConfig.sessionTimEntriesCollectionName, queryObj);
 
     return new Promise<string>((resolve: (value: string) => void) => {
-      timeEntriesPromise.then((sessionTimeEntryDocs: ISessionTimeEntryDocument[]) => {
+      timeEntriesPromise.then((sessionTimeEntryDocs: ITimeEntryBase[]) => {
         if (!sessionTimeEntryDocs ||
           !sessionTimeEntryDocs.length) {
           Logger.instance.error('sessionTimeEntryDocs.length:' + sessionTimeEntryDocs.length);
@@ -165,7 +165,7 @@ export default {
       });
     });
   },
-  getTimeStrFromSessionTimeEntry(docs: ISessionTimeEntryDocument[]) {
+  getTimeStrFromSessionTimeEntry(docs: ITimeEntryBase[]) {
     try {
       // Logger.instance.info(JSON.stringify(docs, null, 4));
 
@@ -223,7 +223,7 @@ export default {
     const workingTimeEntriesPromise = this.getWorkingTimeEntriesByDay(mongoDbOperations, selectedDay, undefined);
     return new Promise((resolve: (value: Duration) => void) => {
       try {
-        workingTimeEntriesPromise.then((docs: ISessionTimeEntryDocument[]) => {
+        workingTimeEntriesPromise.then((docs: ITimeEntryBase[]) => {
           // Logger.instance.info('found docs number of items:' + docs.length);
           const duration = this.getTimeStrFromSessionTimeEntry(docs);
           resolve(duration);

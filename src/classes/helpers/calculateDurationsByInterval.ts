@@ -133,7 +133,12 @@ export class CalculateDurationsByInterval {
         }
         let durationInMilliseconds = Duration.fromMillis(0);
         for (const oneTimeEntry of oneBufferOfTimeEntries) {
-          const oneDuration = Duration.fromObject(oneTimeEntry.durationInMilliseconds);
+          const durationInMillisecondsFromTimeEntry = oneTimeEntry.durationInMilliseconds;
+          if (typeof durationInMillisecondsFromTimeEntry === 'undefined') {
+            Logger.instance.error('no durationInMillisecondsFromTimeEntry:' + JSON.stringify(oneTimeEntry, null, 4));
+            continue;
+          }
+          const oneDuration = Duration.fromObject(durationInMillisecondsFromTimeEntry);
           durationInMilliseconds = durationInMilliseconds.plus(oneDuration);
           overallDurationSumInMilliseconds = overallDurationSumInMilliseconds.plus(oneDuration);
         }
@@ -214,7 +219,12 @@ export class CalculateDurationsByInterval {
         let oneOverallSum = Duration.fromMillis(0);
         for (const oneTimeEntry of timeEntriesOfOneCategory) {
           // const oneDuration = oneTimeEntry.durationInMilliseconds;
-          const singleDuration = Duration.fromObject(oneTimeEntry.durationInMilliseconds);
+          const durInMilis = oneTimeEntry.durationInMilliseconds;
+          if(typeof durInMilis === 'undefined') {
+            Logger.instance.error('no durInMillis:' + JSON.stringify(oneTimeEntry, null, 4));
+            continue;
+          }
+          const singleDuration = Duration.fromObject(durInMilis);
           const taskId = oneTimeEntry._taskId;
 
           // necessary: the timeEntries could be disabled by either booking or commit...

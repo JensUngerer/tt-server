@@ -9,7 +9,7 @@ import { FilterQuery } from 'mongodb';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import { ITimeEntryDocument } from '../../../../common/typescript/mongoDB/iTimeEntryDocument';
 import { IContextLine } from '../../../../common/typescript/iContextLine';
-import { Duration } from 'luxon';
+import { Duration, DurationObject } from 'luxon';
 import { Constants } from './../../../../common/typescript/constants';
 import App from '../../app';
 import { Logger } from './../../logger';
@@ -43,10 +43,15 @@ class TaskController {
 
       // csv Data
       try {
-        const duration = Duration.fromObject(oneTimeEntryDoc.durationInMilliseconds);
+        const durationInMilliseconds = oneTimeEntryDoc.durationInMilliseconds;
+        if (typeof durationInMilliseconds === 'undefined') {
+          Logger.instance.error('no durationInMilliseconds:' + JSON.stringify(oneTimeEntryDoc, null, 4));
+          continue;
+        }
+        const duration = Duration.fromObject(durationInMilliseconds);
         const durationText = duration.toFormat(Constants.contextDurationFormat);
         const taskNumber = (oneCorrespondingTask as ITasksDocument).number;
-        const taskName =  (oneCorrespondingTask as ITasksDocument).name;
+        const taskName = (oneCorrespondingTask as ITasksDocument).name;
 
         contextLines.push({
           duration: durationText,
@@ -68,6 +73,10 @@ class TaskController {
     // patchPromiseForWritingTheDuration.then(() => {
     const taskId = singleDoc._taskId;
     const propertyValue = singleDoc.durationInMilliseconds;
+    if (typeof propertyValue === 'undefined') {
+      Logger.instance.error('no durationInMilliseconds:' + JSON.stringify(singleDoc, null, 4));
+      return;
+    }
     const taskPromise = TaskController.getViaTaskId(taskId, mongoDbOperations);
     taskPromise.then((taskDocs: ITasksDocument[]) => {
       if (!taskDocs || !taskDocs.length || taskDocs.length > 1) {
@@ -75,6 +84,11 @@ class TaskController {
         return;
       }
       let mongoDbDurationSumMap = taskDocs[0].durationSumInMillisecondsMap;
+      if (!singleDoc ||
+        typeof singleDoc.day === 'undefined') {
+        Logger.instance.error('no day on single doc:' + JSON.stringify(singleDoc, null, 4));
+        return;
+      }
 
       const currentDayGetTime = singleDoc.day.getTime();
 
