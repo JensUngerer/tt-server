@@ -10,6 +10,7 @@ import { DurationCalculator } from '../../../../common/typescript/helpers/durati
 import { Request } from 'express';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
+import { v4 } from 'uuid';
 
 export default {
   patchWorkingTimeEntry(id: string, req: Request, mongoDbOperations: MonogDbOperations) {
@@ -17,7 +18,7 @@ export default {
 
     return mongoDbOperations.updateOne(routesConfig.timeEntryIdProperty, id, updatedSessionTimeEntryDocument, routesConfig.sessionTimEntriesCollectionName);
   },
-  getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date,  additionalCriteria?: {[key: string]: any}) {
+  getWorkingTimeEntriesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date, additionalCriteria?: { [key: string]: any }) {
     return new Promise((resolve: (value: ITimeEntryBase[]) => void) => {
       try {
         const docsPromise = mongoDbOperations.filterByDay(routesConfig.sessionTimEntriesCollectionName, selectedDay, additionalCriteria);
@@ -213,6 +214,54 @@ export default {
       return zeroDuration;
     }
 
+  },
+  getPausesByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
+    // undefined -> no additional criteria -> so "get everything", also non completed time entries
+    const workingTimeEntriesPromise = this.getWorkingTimeEntriesByDay(mongoDbOperations, selectedDay, undefined);
+    return new Promise((resolve: (value: ITimeEntryBase[]) => void) => {
+      try {
+        workingTimeEntriesPromise.then((docs: ITimeEntryBase[]) => {
+          if (!docs ||
+            !docs.length) {
+            resolve([]);
+            return;
+          }
+          const pauses: ITimeEntryBase[] = [];
+          const docsLength = docs.length;
+          docs.forEach((currentDoc, currentIndex) => {
+            if (currentIndex < docsLength - 1) {
+              // it is not the last doc!
+              const nextDoc = docs[currentIndex + 1];
+              const theEndOfInterval = nextDoc.startTime;
+              const theStartOfInterval = currentDoc.endTime;
+              if (typeof theStartOfInterval === 'undefined') {
+                Logger.instance.error('no endTime for pauses calculation:' + JSON.stringify(currentDoc, null, 4));
+                return;
+              }
+              const durationInMillis = theEndOfInterval.getTime() - theStartOfInterval.getTime();
+              let duration = Duration.fromMillis(durationInMillis);
+              duration = duration.shiftTo(...Constants.shiftToParameter);
+              pauses.push({
+                startTime: theStartOfInterval,
+                endTime: theEndOfInterval,
+                timeEntryId: v4(),
+                day: DurationCalculator.getDayFrom(theStartOfInterval),
+                durationInMilliseconds: duration.toObject(),
+              });
+            }
+          });
+          resolve(pauses);
+        });
+        workingTimeEntriesPromise.catch((err: any) => {
+          Logger.instance.error(err);
+          resolve([]);
+        });
+      }
+      catch (exception) {
+        Logger.instance.error(exception);
+        resolve([]);
+      }
+    });
   },
   getWorkingTimeByDay(mongoDbOperations: MonogDbOperations, selectedDay: Date) {
     let zeroDuration = Duration.fromObject(Constants.durationInitializationZero);
