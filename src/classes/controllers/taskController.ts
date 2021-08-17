@@ -9,7 +9,7 @@ import { FilterQuery } from 'mongodb';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import { ITimeEntryDocument } from '../../../../common/typescript/mongoDB/iTimeEntryDocument';
 import { IContextLine } from '../../../../common/typescript/iContextLine';
-import { Duration, DurationObject } from 'luxon';
+import { Duration } from 'luxon';
 import { Constants } from './../../../../common/typescript/constants';
 import App from '../../app';
 import { Logger } from './../../logger';

@@ -1,6 +1,5 @@
 import { FilterQuery } from 'mongodb';
 import { MonogDbOperations } from '../helpers/mongoDbOperations';
-import { ISessionTimeEntryDocument } from './../../../../common/typescript/mongoDB/iSessionTimeEntryDocument';
 
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
