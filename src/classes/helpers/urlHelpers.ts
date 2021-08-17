@@ -16,6 +16,13 @@ export class UrlHelpers {
     return properties;
   }
 
+  public static getDateFromUrlTimeStamp(rawUrl: string) {
+    const rawRequestedDayTimeStamp = UrlHelpers.getIdFromUlr(rawUrl);
+    const rawRequestedDay = parseInt(rawRequestedDayTimeStamp);
+    const requestedDay = new Date(rawRequestedDay);
+    return requestedDay;
+  }
+
   public static getIdFromUlr(rawUrl: string) {
     const suffix = UrlHelpers.getStringAfterLastSlash(rawUrl);
     return suffix;

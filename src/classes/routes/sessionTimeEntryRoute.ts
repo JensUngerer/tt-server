@@ -32,10 +32,7 @@ const getSessionTimeEntry = async (req: Request, res: Response) => {
 const getWorkingTimeEntries = async (req: Request, res: Response) => {
   try {
     const url = req.url;
-    const urlSplit = url.split('/');
-    const rawRequestedDayTimeStamp = urlSplit[urlSplit.length - 1];
-    const rawRequestedDay = parseInt(rawRequestedDayTimeStamp);
-    const requestedDay = new Date(rawRequestedDay);
+    const requestedDay = UrlHelpers.getDateFromUrlTimeStamp(url);
     // only terminated (completed) time-entries (with endTime != null)
     const additionalCriteria: { [key: string]: any } = {
     };
@@ -80,6 +77,21 @@ const getWorkingTime = async (req: Request, res: Response) => {
   }
 };
 
+const getPausesByDay = async (req: Request, res: Response) => {
+  try {
+    const url = req.url;
+    const requestedDay = UrlHelpers.getDateFromUrlTimeStamp(url);
+    const timeEntryDocs: ITimeEntryBase[] = await sessionTimeEntryController.getPausesByDay(App.mongoDbOperations, requestedDay);
+
+    const serializedResponse = Serialization.serialize(timeEntryDocs);
+
+    res.send(serializedResponse);
+  } catch (ex: any) {
+    Logger.instance.error(ex);
+    res.send('');
+  }
+};
+
 const getWeeklyWorkingTime = async (req: Request, res: Response) => {
   const durationResponse = await sessionTimeEntryController.getWorkingTimeByWeek(App.mongoDbOperations);
   if (!durationResponse) {
@@ -104,4 +116,7 @@ workingTimeEntriesRoute.get(getWorkingTimeEntries);
 
 const workingTimeEntryPatchRoute = router.route(routesConfig.workingTimeEntriesSuffix + '/*');
 workingTimeEntryPatchRoute.patch(patchWorkingTimeEntry);
+
+const workingHoursPausesGetRoute = router.route(routesConfig.workingTimePausesSuffix + '/*');
+workingHoursPausesGetRoute.get(getPausesByDay);
 export default router;
