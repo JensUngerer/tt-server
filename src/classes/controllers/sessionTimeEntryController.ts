@@ -13,6 +13,9 @@ import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
 import { v4 } from 'uuid';
 
 export default {
+  postWorkingTime(workingTimeEntry: ITimeEntryBase, mongoDbOperations: MonogDbOperations) {
+    return mongoDbOperations.insertOne(workingTimeEntry, routesConfig.sessionTimEntriesCollectionName);
+  },
   patchWorkingTimeEntry(id: string, req: Request, mongoDbOperations: MonogDbOperations) {
     const updatedSessionTimeEntryDocument = Serialization.deSerialize<ITimeEntryBase>(req.body);
 

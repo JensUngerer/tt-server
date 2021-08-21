@@ -102,11 +102,27 @@ const getWeeklyWorkingTime = async (req: Request, res: Response) => {
   const serializedResponse = Serialization.serialize(durationStr);
   res.send(serializedResponse);
 };
+
+const postWorkingTime = async (req: Request, res: Response) => {
+  try {
+    const body = Serialization.deSerialize<any>(req.body);
+
+    const timeEntry: ITimeEntryBase = body[routesConfig.workingTimPostPropertyName];
+    const postResult = await sessionTimeEntryController.postWorkingTime(timeEntry, App.mongoDbOperations);
+    const serializedResponse = Serialization.serialize(postResult);
+    res.send(serializedResponse);
+  } catch (err) {
+    Logger.instance.error(err);
+    res.send('');
+  }
+};
+
 const rootRoute = router.route('/');
 rootRoute.get(getSessionTimeEntry);
 
 const workingTimeRoute = router.route(routesConfig.workingTimeSuffix);
 workingTimeRoute.get(getWorkingTime);
+workingTimeRoute.post(postWorkingTime);
 
 const weeklyWorkingTimeRoute = router.route(routesConfig.weeklyWorkingTimeSuffix);
 weeklyWorkingTimeRoute.get(getWeeklyWorkingTime);
@@ -119,4 +135,5 @@ workingTimeEntryPatchRoute.patch(patchWorkingTimeEntry);
 
 const workingHoursPausesGetRoute = router.route(routesConfig.workingTimePausesSuffix + '/*');
 workingHoursPausesGetRoute.get(getPausesByDay);
+
 export default router;
