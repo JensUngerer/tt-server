@@ -119,10 +119,10 @@ const postWorkingTime = async (req: Request, res: Response) => {
 
 const rootRoute = router.route('/');
 rootRoute.get(getSessionTimeEntry);
+rootRoute.post(postWorkingTime);
 
 const workingTimeRoute = router.route(routesConfig.workingTimeSuffix);
 workingTimeRoute.get(getWorkingTime);
-workingTimeRoute.post(postWorkingTime);
 
 const weeklyWorkingTimeRoute = router.route(routesConfig.weeklyWorkingTimeSuffix);
 weeklyWorkingTimeRoute.get(getWeeklyWorkingTime);
