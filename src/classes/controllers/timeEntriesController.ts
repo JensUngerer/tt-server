@@ -2,7 +2,7 @@ import { RequestProcessingHelpers } from './../helpers/requestProcessingHelpers'
 import { TimeManagement } from './../helpers/timeManagement';
 import { FilterQuery } from 'mongodb';
 import { Request } from 'express';
-import { ITimeEntry } from './../../../../common/typescript/iTimeEntry';
+import { ITimeEntry, ITimeEntryBase } from './../../../../common/typescript/iTimeEntry';
 // @ts-ignore
 import routesConfig from './..&../../../../../../common/typescript/routes.js';
 import { MonogDbOperations } from '../helpers/mongoDbOperations';
@@ -15,6 +15,7 @@ import { ITimeInterval } from './../../../../common/typescript/iTimeInterval';
 import { Constants } from '../../../../common/typescript/constants';
 import { CsvHelper } from '../helpers/csvHelper';
 import { Logger } from './../../logger';
+import { TimeEntriesHelper } from '../helpers/timeEntriesHelper';
 
 export default {
   postCsvWrite(timeEntries: ITimeEntryDocument[]) {
@@ -326,5 +327,36 @@ export default {
 
     const promise = mongoDbOperations.getFiltered(routesConfig.bookingDeclarationsCollectionName, theQueryObj);
     return promise;
+  },
+  getEmptyTimeIntervals(intervalStart: Date, intervalEnd: Date, mongoDbOperations: MonogDbOperations) {
+    const theQueryObj: FilterQuery<any> = {};
+
+    // https://stackoverflow.com/questions/21286599/inserting-and-querying-date-with-mongodb-and-nodejs/21286896#21286896
+    theQueryObj[routesConfig.startTimeProperty] = {
+      '$gte': intervalStart,
+    };
+    // time entries must be 'terminated' !
+    theQueryObj[routesConfig.endDateProperty] = {
+      $ne: null,
+    };
+
+    theQueryObj[routesConfig.startTimeProperty] = {
+      '$lt': intervalEnd,
+    };
+    return new Promise((resolve: (value?: any) => void) => {
+      const timeEntriesInIntervalPromise = mongoDbOperations.getFiltered(routesConfig.timEntriesCollectionName, theQueryObj);
+      timeEntriesInIntervalPromise.then((timeEntriesInInterval: ITimeEntryBase[]) => {
+        if (!timeEntriesInInterval ||
+          !timeEntriesInInterval.length) {
+          resolve([]);
+          return;
+        }
+        const pauses = TimeEntriesHelper.getPausesFrom(timeEntriesInInterval);
+        resolve(pauses);
+      });
+      timeEntriesInIntervalPromise.catch((err: any[]) => {
+        Logger.instance.error(err);
+      });
+    });
   },
 };

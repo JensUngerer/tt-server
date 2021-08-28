@@ -15,6 +15,7 @@ import { ISummarizedTasks } from './../../../../common/typescript/summarizedData
 import taskController from '../controllers/taskController';
 import { IContextLine } from './../../../../common/typescript/iContextLine';
 import { Logger } from './../../logger';
+import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
 
 const router = express.Router();
 
@@ -400,6 +401,21 @@ const postCsvWrite = async (req: Request, res: Response) => {
   res.send(stringifiedResponse);
 };
 
+const getEmptyTimeEntriesHandler = async (req: Request, res: Response) => {
+  const startTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.startTimeProperty);
+  const endTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.endDateProperty);
+
+  if (!startTimeUtc || !endTimeUtc) {
+    Logger.instance.error('no start time or end time to get the "empty time entries"');
+    res.send('');
+    return;
+  }
+
+  const response: ITimeEntryBase[] = await timeEntriesController.getEmptyTimeIntervals(startTimeUtc, endTimeUtc, App.mongoDbOperations);
+  const stringifiedResponse = Serialization.serialize(response);
+  res.send(stringifiedResponse);
+};
+
 const rootRoute = router.route('/');
 rootRoute.get(getTimeEntries);
 rootRoute.post(postTimeEntries);
@@ -418,6 +434,9 @@ durationRoute.get(getDurationStr);
 
 const getInterval = router.route(routesConfig.timeEntriesIntervalSuffix + '*');
 getInterval.get(getTimeInterval);
+
+const getEmptyTimeEntriesRoute = router.route(routesConfig.emptyTimeEntriesSuffix + '*');
+getEmptyTimeEntriesRoute.get(getEmptyTimeEntriesHandler);
 
 const deleteByTaskIdRoute = router.route(routesConfig.deleteTimeEntryByTaskIdSuffix + '/*');
 deleteByTaskIdRoute.delete(deleteByTaskId);

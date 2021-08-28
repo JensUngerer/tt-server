@@ -10,7 +10,7 @@ import { DurationCalculator } from '../../../../common/typescript/helpers/durati
 import { Request } from 'express';
 import { Serialization } from '../../../../common/typescript/helpers/serialization';
 import { ITimeEntryBase } from '../../../../common/typescript/iTimeEntry';
-import { v4 } from 'uuid';
+import { TimeEntriesHelper } from '../helpers/timeEntriesHelper';
 
 export default {
   postWorkingTime(workingTimeEntry: ITimeEntryBase, mongoDbOperations: MonogDbOperations) {
@@ -229,30 +229,7 @@ export default {
             resolve([]);
             return;
           }
-          const pauses: ITimeEntryBase[] = [];
-          const docsLength = docs.length;
-          docs.forEach((currentDoc, currentIndex) => {
-            if (currentIndex < docsLength - 1) {
-              // it is not the last doc!
-              const nextDoc = docs[currentIndex + 1];
-              const theEndOfInterval = nextDoc.startTime;
-              const theStartOfInterval = currentDoc.endTime;
-              if (typeof theStartOfInterval === 'undefined') {
-                Logger.instance.error('no endTime for pauses calculation:' + JSON.stringify(currentDoc, null, 4));
-                return;
-              }
-              const durationInMillis = theEndOfInterval.getTime() - theStartOfInterval.getTime();
-              let duration = Duration.fromMillis(durationInMillis);
-              duration = duration.shiftTo(...Constants.shiftToParameter);
-              pauses.push({
-                startTime: theStartOfInterval,
-                endTime: theEndOfInterval,
-                timeEntryId: v4(),
-                day: DurationCalculator.getDayFrom(theStartOfInterval),
-                durationInMilliseconds: duration.toObject(),
-              });
-            }
-          });
+          const pauses = TimeEntriesHelper.getPausesFrom(docs);
           resolve(pauses);
         });
         workingTimeEntriesPromise.catch((err: any) => {
