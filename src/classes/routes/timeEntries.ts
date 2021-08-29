@@ -401,6 +401,21 @@ const postCsvWrite = async (req: Request, res: Response) => {
   res.send(stringifiedResponse);
 };
 
+const getRawTimeEntriesInIntervalHandler = async (req: Request, res: Response) => {
+  const startTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.startTimeProperty);
+  const endTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.endDateProperty);
+
+  if (!startTimeUtc || !endTimeUtc) {
+    Logger.instance.error('no start time or end time to get the "raw time entries"');
+    res.send('');
+    return;
+  }
+
+  const response: ITimeEntryBase[] = await timeEntriesController.getRawTimeEntriesInInterval(startTimeUtc, endTimeUtc, App.mongoDbOperations);
+  const stringifiedResponse = Serialization.serialize(response);
+  res.send(stringifiedResponse);
+};
+
 const getEmptyTimeEntriesHandler = async (req: Request, res: Response) => {
   const startTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.startTimeProperty);
   const endTimeUtc = UrlHelpers.getDateObjFromUrl(req.url, routesConfig.endDateProperty);
@@ -434,6 +449,9 @@ durationRoute.get(getDurationStr);
 
 const getInterval = router.route(routesConfig.timeEntriesIntervalSuffix + '*');
 getInterval.get(getTimeInterval);
+
+const getRawTimeEntriesInIntervalRoute = router.route(routesConfig.rawTimeEntriesSuffix + '*');
+getRawTimeEntriesInIntervalRoute.get(getRawTimeEntriesInIntervalHandler);
 
 const getEmptyTimeEntriesRoute = router.route(routesConfig.emptyTimeEntriesSuffix + '*');
 getEmptyTimeEntriesRoute.get(getEmptyTimeEntriesHandler);

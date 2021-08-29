@@ -328,7 +328,7 @@ export default {
     const promise = mongoDbOperations.getFiltered(routesConfig.bookingDeclarationsCollectionName, theQueryObj);
     return promise;
   },
-  getEmptyTimeIntervals(intervalStart: Date, intervalEnd: Date, mongoDbOperations: MonogDbOperations) {
+  getRawTimeEntriesInInterval(intervalStart: Date, intervalEnd: Date, mongoDbOperations: MonogDbOperations) {
     const theQueryObj: FilterQuery<any> = {};
 
     // https://stackoverflow.com/questions/21286599/inserting-and-querying-date-with-mongodb-and-nodejs/21286896#21286896
@@ -343,8 +343,12 @@ export default {
     theQueryObj[routesConfig.startTimeProperty] = {
       '$lt': intervalEnd,
     };
+    const timeEntriesInIntervalPromise = mongoDbOperations.getFiltered(routesConfig.timEntriesCollectionName, theQueryObj);
+    return timeEntriesInIntervalPromise;
+  },
+  getEmptyTimeIntervals(intervalStart: Date, intervalEnd: Date, mongoDbOperations: MonogDbOperations) {
     return new Promise((resolve: (value?: any) => void) => {
-      const timeEntriesInIntervalPromise = mongoDbOperations.getFiltered(routesConfig.timEntriesCollectionName, theQueryObj);
+      const timeEntriesInIntervalPromise = this.getRawTimeEntriesInInterval(intervalStart, intervalEnd, mongoDbOperations);
       timeEntriesInIntervalPromise.then((timeEntriesInInterval: ITimeEntryBase[]) => {
         if (!timeEntriesInInterval ||
           !timeEntriesInInterval.length) {
