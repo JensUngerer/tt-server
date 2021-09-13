@@ -19,7 +19,7 @@ export class CsvHelper {
     // creating dir and resolving file name
     const currentTimeStamp = CsvHelper.currentTimeStamp;
     const fileName = Constants.CONTEXT_BASE_FILE_NAME + '_' + currentTimeStamp + '.csv';
-    const relativePathToCsvFolder: string = './../../../serverNew/csv';
+    const relativePathToCsvFolder: string = './../csv';
     const absolutePathToCsvFolder: string = resolve(App.absolutePathToAppJs, relativePathToCsvFolder);
     if (!existsSync(absolutePathToCsvFolder)) {
       mkdirSync(absolutePathToCsvFolder);
@@ -52,10 +52,10 @@ export class CsvHelper {
       }
 
       const duration = Duration.fromObject(theMillis);
-      const durationText = duration.toFormat(Constants.contextDurationFormat);
-      const durationSuffix = duration.milliseconds.toString();
+      const durationText = duration.toFormat(Constants.contextDurationFormatFull);
+      const durationSuffix = ''; // duration.milliseconds.toString();
       const day = DateTime.fromJSDate(oneTimeEntryDoc.startTime).toFormat(Constants.contextIsoFormat);
-      const startTime = DateTime.fromJSDate(oneTimeEntryDoc.startTime).toFormat(Constants.contextDurationFormat);
+      const startTime = DateTime.fromJSDate(oneTimeEntryDoc.startTime).toFormat(Constants.contextDurationFormatFull);
       const taskNumber = (oneCorrespondingTask as ITasksDocument).number;
       const taskName = (oneCorrespondingTask as ITasksDocument).name;
       const isDisabledInCommit = oneTimeEntryDoc.isDisabledInCommit.toString();
